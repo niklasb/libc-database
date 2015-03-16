@@ -1,12 +1,14 @@
 ## Building a libc offset database
 
-Fetch all the configured libc versions and extract the symbol offset
+Fetch all the configured libc versions and extract the symbol offsets.
+It will not download anything twice, so you can also use it to update your
+database:
 
     $ ./get
 
-Find all the libc's in the database that have a given name at the given address
-(only the last 12 bits are checked, because randomization usually works on page
-size level)
+Find all the libc's in the database that have a given name at the given address.
+Only the last 12 bits are checked, because randomization usually works on page
+size level.
 
     $ ./find printf 260
     archive-eglibc (id 2.15-0ubuntu10_amd64)
@@ -22,7 +24,8 @@ Find a libc from the leaked return address into __libc_start_main.
     archive-glibc (id 2.19-10ubuntu2_i386)
     archive-glibc (id 2.19-15ubuntu2_i386)
 
-Dump some useful offsets, given a libc ID:
+Dump some useful offsets, given a libc ID. You can also provide your own names
+to dump.
 
     $ ./dump 2.19-0ubuntu6.6_i386
     offset___libc_start_main_ret = 0x19a83
