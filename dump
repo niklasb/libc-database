@@ -1,0 +1,16 @@
+#!/bin/bash
+if [[ $# < 1 ]]; then
+  echo >&2 "Usage: $0 id [name1 [name2 ...]]"
+  exit 2
+fi
+id=$1
+shift 1
+if [[ $# == 0 ]]; then
+  names="__libc_start_main_ret system dup2 recv str_bin_sh"
+else
+  names="$@"
+fi
+for name in $names; do
+  offset=`cat db/${id}.symbols | grep "^$name " | cut -d' ' -f2`
+  echo "offset_${name} = 0x${offset}"
+done
