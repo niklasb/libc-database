@@ -6,6 +6,10 @@ database:
 
     $ ./get
 
+You can also add a custom libc to your database.
+
+    $ ./add /usr/lib/libc-2.21.so
+
 Find all the libc's in the database that have a given name at the given address.
 Only the last 12 bits are checked, because randomization usually works on page
 size level.
