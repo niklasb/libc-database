@@ -6,7 +6,7 @@ fi
 name=$1
 address=$2
 addr_last12=`echo -n "$address" | tail -c 3`
-for id in `grep -e "$name .*$addr_last12" db/*.symbols \
+for id in `grep -e "^$name .*$addr_last12" db/*.symbols \
       | perl -n -e '/db\/(.*)\.symbols/ && print "$1\n"'`; do
   echo "`cat db/${id}.info` (id $id)"
 done

@@ -33,7 +33,7 @@ get_ubuntu() {
   local info="$2"
   echo "Getting $info"
   echo "  -> Location: $url"
-  local id=`echo $url | perl -n -e '/_(.*)\./ && print $1'`
+  local id=`echo $url | perl -n -e '/(libc6[^\/]*)\./ && print $1'`
   echo "  -> ID: $id"
   if [[ -e db/${id}.info ]]; then
     echo "  -> Already have this version, 'rm db/${id}.*' to force"
@@ -45,7 +45,7 @@ get_ubuntu() {
   echo "  -> Extracting package"
   cd tmp
   ar x pkg.deb || die "ar failed"
-  tar xf data.tar.gz || die "tar failed"
+  tar xf data.tar.* || die "tar failed"
   cd ..
   local libc=`find tmp -name libc.so.6 || die "Cannot locate libc.so.6"`
   echo "  -> Writing libc to db/${id}.so"
@@ -59,24 +59,27 @@ get_ubuntu() {
 get_current_ubuntu() {
   local version=$1
   local arch=$2
-  local info=ubuntu-$version-$arch
+  local pkg=$3
+  local info=ubuntu-$version-$arch-$pkg
   echo "Getting package location for ubuntu-$version-$arch"
-  local url=`(wget http://packages.ubuntu.com/$version/$arch/libc6/download -O - 2>/dev/null \
+  local url=`(wget http://packages.ubuntu.com/$version/$arch/$pkg/download -O - 2>/dev/null \
                | grep -oh 'http://[^"]*libc6[^"]*.deb') || die "Failed to get package version"`
   get_ubuntu $url $info
 }
 get_all_ubuntu() {
   local info=$1
   local url=$2
-  for f in `wget $url/ -O - 2>/dev/null | grep -oh 'libc6_[^"]*' |grep -v "</a>"`; do
+  for f in `wget $url/ -O - 2>/dev/null | egrep -oh 'libc6(-i386|-amd64)?_[^"]*' |grep -v "</a>"`; do
     get_ubuntu $url/$f $1
   done
 }
 
-get_current_ubuntu trusty i386
-get_current_ubuntu trusty amd64
-get_current_ubuntu utopic i386
-get_current_ubuntu utopic amd64
+get_current_ubuntu trusty i386 libc6
+get_current_ubuntu trusty amd64 libc6
+get_current_ubuntu trusty amd64 libc6-i386
+get_current_ubuntu utopic i386 libc6
+get_current_ubuntu utopic amd64 libc6
+get_current_ubuntu utopic amd64 libc6-i386
 
 get_all_ubuntu archive-eglibc http://security.ubuntu.com/ubuntu/pool/main/e/eglibc/
 get_all_ubuntu archive-glibc http://security.ubuntu.com/ubuntu/pool/main/g/glibc/
