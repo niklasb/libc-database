@@ -25,7 +25,7 @@ Find a libc from the leaked return address into __libc_start_main.
 Dump some useful offsets, given a libc ID. You can also provide your own names
 to dump.
 
-    $ ./dump
+    $ ./dump libc6_2.19-0ubuntu6.6_i386
     offset___libc_start_main_ret = 0x19a83
     offset_system = 0x00040190
     offset_dup2 = 0x000db590
