@@ -5,4 +5,4 @@ if [[ $# != 1 ]]; then
 fi
 libc=$1
 sha1=`sha1sum $libc`
-sha1sum db/*.so | grep $sha1
+sha1sum db/*.so | grep `echo $sha1 | awk '{print $1 }'`
