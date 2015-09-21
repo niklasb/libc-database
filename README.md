@@ -35,3 +35,8 @@ to dump.
     offset_dup2 = 0x000db590
     offset_recv = 0x000ed2d0
     offset_str_bin_sh = 0x160a24
+
+Check whether a library is already in the database.
+
+    $ ./identify /usr/lib/libc.so.6
+    id local-f706181f06104ef6c7008c066290ea47aa4a82c5

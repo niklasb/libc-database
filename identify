@@ -4,5 +4,5 @@ if [[ $# != 1 ]]; then
   exit 2
 fi
 libc=$1
-sha1=`sha1sum $libc`
-sha1sum db/*.so | grep `echo $sha1 | awk '{print $1 }'`
+sha1=`sha1sum $libc | awk '{print $1}'`
+sha1sum db/*.so | grep "$sha1 " | perl -n -e '/db\/(.*)\.so/&&print "id $1\n"'
