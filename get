@@ -4,12 +4,15 @@
 get_current_ubuntu trusty i386 libc6
 get_current_ubuntu trusty amd64 libc6
 get_current_ubuntu trusty amd64 libc6-i386
-get_current_ubuntu utopic i386 libc6
-get_current_ubuntu utopic amd64 libc6
-get_current_ubuntu utopic amd64 libc6-i386
+#get_current_ubuntu utopic i386 libc6
+#get_current_ubuntu utopic amd64 libc6
+#get_current_ubuntu utopic amd64 libc6-i386
 get_current_ubuntu vivid i386 libc6
 get_current_ubuntu vivid amd64 libc6
 get_current_ubuntu vivid amd64 libc6-i386
+get_current_ubuntu wily i386 libc6
+get_current_ubuntu wily amd64 libc6
+get_current_ubuntu wily amd64 libc6-i386
 
 get_all_ubuntu archive-eglibc http://security.ubuntu.com/ubuntu/pool/main/e/eglibc/
 get_all_ubuntu archive-glibc http://security.ubuntu.com/ubuntu/pool/main/g/glibc/
