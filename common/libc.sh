@@ -17,9 +17,9 @@ extract_label() {
 
 dump_libc_start_main_ret() {
   local call_main=`objdump -D $1 \
-    | grep -A 100 '<__libc_start_main>' \
+    | egrep -A 100 '<__libc_start_main.*>' \
     | grep call \
-    | grep -B 1 '<exit>' \
+    | egrep -B 1 '<exit.*>' \
     | head -n 1 \
     | extract_label`
   local offset=`objdump -D $1 | egrep -A 1 "(^| )$call_main:" | tail -n 1 | extract_label`
