@@ -1,12 +1,31 @@
 #!/bin/bash
-if [[ $# != 2 ]]; then
-  echo >&2 "Usage: $0 name address"
+function usage() {
+  echo >&2 "Usage: $0 name address [name address ...]"
   exit 2
-fi
-name=$1
-address=$2
-addr_last12=`echo -n "$address" | tail -c 3`
-for id in `grep -e "^$name .*$addr_last12" db/*.symbols \
-      | perl -n -e '/db\/(.*)\.symbols/ && print "$1\n"'`; do
+}
+
+function find_single() {
+  name=$1
+  address=$2
+  addr_last12=`echo -n "$address" | tail -c 3 | tr '[:upper:]' '[:lower:]'`
+  grep -e "^$name .*$addr_last12$" db/*.symbols \
+    | perl -n -e '/db\/(.*)\.symbols/ && print "$1\n"' \
+    | sort
+}
+
+function find() {
+  [[ $# < 2 ]] && usage
+  name=$1; shift
+  address=$1; shift
+  if [[ $# == 0 ]]; then
+    find_single $name $address
+  else
+    comm -12 \
+      <(find_single $name $address) \
+      <(find "$@")
+  fi
+}
+
+for id in `find "$@"`; do
   echo "`cat db/${id}.info` (id $id)"
 done
