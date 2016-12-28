@@ -1,6 +1,6 @@
 #!/bin/bash
 
-mkdir -p tmp db
+mkdir -p db
 
 die() {
   echo >&2 $1
@@ -62,21 +62,22 @@ check_id() {
 get_ubuntu() {
   local url="$1"
   local info="$2"
+  local tmp=`mktemp -d || mktemp -d -t "libc-database" || die "Cannot get temp dir"`
   echo "Getting $info"
   echo "  -> Location: $url"
   local id=`echo $url | perl -n -e '/(libc6[^\/]*)\./ && print $1'`
   echo "  -> ID: $id"
   check_id $id || return
   echo "  -> Downloading package"
-  rm -rf tmp/*
-  wget $url 2>/dev/null -O tmp/pkg.deb || die "Failed to download package from $url"
+  wget $url 2>/dev/null -O $tmp/pkg.deb || die "Failed to download package from $url"
   echo "  -> Extracting package"
-  cd tmp
+  pushd $tmp 1>/dev/null
   ar x pkg.deb || die "ar failed"
   tar xf data.tar.* || die "tar failed"
-  cd ..
-  local libc=`find tmp -name libc.so.6 || die "Cannot locate libc.so.6"`
+  popd 1>/dev/null
+  local libc=`find $tmp -name libc.so.6 || die "Cannot locate libc.so.6"`
   process_libc $libc $id $info
+  rm -rf $tmp
 }
 
 get_current_ubuntu() {
