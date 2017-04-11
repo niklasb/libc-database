@@ -1,0 +1,37 @@
+#!/bin/bash
+if [[ $# != 4 ]]; then
+  echo >&2 "Usage: $0 name_1 address_1 name_2 address_2"
+  exit 2
+fi
+
+name_1=$1
+address_1=$2
+name_2=$3
+address_2=$4
+
+# get offset from absolute addresses
+tmp=$((address_1-address_2));
+abs_offset=${tmp#-};
+
+for id in db/*.symbols; do
+    id=$(basename ${id%.*})
+
+    offset_1=`cat db/${id}.symbols | grep "^$name_1 " | cut -d' ' -f2`
+    offset_2=`cat db/${id}.symbols | grep "^$name_2 " | cut -d' ' -f2`
+    if [[ -n $offset_1 && -n $offset_2 ]]; then
+        offset_1=0x$offset_1
+        offset_2=0x$offset_2
+    else
+        echo >&2 "Couldn't find offsets for given symbols in $id: $name_1=$offset_1; $name_2=$offset_2"
+        continue
+    fi
+
+    # get diff from libc-offsets
+    tmp=$((offset_1-offset_2))
+    abs_diff=${tmp#-}
+
+    # check if offsets are equal
+    if [[ $abs_offset == $abs_diff ]]; then
+        echo "`cat db/${id}.info` (id $id)"
+    fi
+done
