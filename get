@@ -16,9 +16,9 @@ get_current_ubuntu trusty amd64 libc6-i386
 get_current_ubuntu xenial i386 libc6
 get_current_ubuntu xenial amd64 libc6
 get_current_ubuntu xenial amd64 libc6-i386
-get_current_ubuntu yakkety i386 libc6
-get_current_ubuntu yakkety amd64 libc6
-get_current_ubuntu yakkety amd64 libc6-i386
+#get_current_ubuntu yakkety i386 libc6
+#get_current_ubuntu yakkety amd64 libc6
+#get_current_ubuntu yakkety amd64 libc6-i386
 get_current_ubuntu zesty i386 libc6
 get_current_ubuntu zesty amd64 libc6
 get_current_ubuntu zesty amd64 libc6-i386
