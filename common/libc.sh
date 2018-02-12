@@ -29,7 +29,7 @@ dump_libc_start_main_ret() {
 }
 
 dump_bin_sh() {
-  local offset=`strings -a -t x $1 | grep '/bin/sh' | extract_label`
+  local offset=`strings -a -t x $1 | grep '/bin/sh' | head -n1 | extract_label`
   if [[ "$offset" != "" ]]; then
     echo "str_bin_sh $offset"
   fi
