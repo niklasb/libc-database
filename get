@@ -31,3 +31,5 @@ get_current_ubuntu bionic amd64 libc6-i386
 
 get_all_ubuntu archive-eglibc http://security.ubuntu.com/ubuntu/pool/main/e/eglibc/
 get_all_ubuntu archive-glibc http://security.ubuntu.com/ubuntu/pool/main/g/glibc/
+get_all_ubuntu archive-old-eglibc http://old-releases.ubuntu.com/ubuntu/pool/main/e/eglibc/
+get_all_ubuntu archive-old-glibc http://old-releases.ubuntu.com/ubuntu/pool/main/g/glibc/
