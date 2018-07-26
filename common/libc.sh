@@ -94,7 +94,7 @@ get_current_ubuntu() {
 get_all_ubuntu() {
   local info=$1
   local url=$2
-  for f in `wget $url/ -O - 2>/dev/null | egrep -oh 'libc6(-i386|-amd64)?_[^"]*' |grep -v "</a>"`; do
+  for f in `wget $url/ -O - 2>/dev/null | egrep -oh 'libc6(-i386|-amd64|_)[^"]*(i386|amd64)\.deb' |grep -v "</a>"`; do
     get_ubuntu $url/$f $1
   done
 }
