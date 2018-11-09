@@ -1,4 +1,5 @@
 #!/bin/bash
+cd "$(dirname "$0")"
 . common/libc.sh
 
 get_current_ubuntu trusty i386 libc6
