@@ -39,6 +39,7 @@ process_libc() {
   local libc=$1
   local id=$2
   local info=$3
+  local url=$4
   echo "  -> Writing libc to db/${id}.so"
   cp $libc db/${id}.so
   echo "  -> Writing symbols to db/${id}.symbols"
@@ -46,6 +47,7 @@ process_libc() {
      > db/${id}.symbols
   echo "  -> Writing version info"
   echo "$info" > db/${id}.info
+  echo "$url" > db/${id}.url
 }
 
 check_id() {
@@ -78,7 +80,7 @@ get_ubuntu() {
   suffix=
   cnt=1
   for libc in $(find $tmp -name libc.so.6 || die "Cannot locate libc.so.6"); do
-    process_libc $libc $id$suffix $info
+    process_libc $libc $id$suffix $info $url
     cnt=$((cnt+1))
     suffix=_$cnt
   done

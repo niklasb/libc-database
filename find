@@ -1,4 +1,5 @@
 #!/bin/bash
+cd "$(dirname "$0")"
 function usage() {
   echo >&2 "Usage: $0 name address [name address ...]"
   exit 2
