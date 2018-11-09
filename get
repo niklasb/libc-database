@@ -29,9 +29,9 @@ get_current_ubuntu artful amd64 libc6-i386
 get_current_ubuntu bionic i386 libc6
 get_current_ubuntu bionic amd64 libc6
 get_current_ubuntu bionic amd64 libc6-i386
-get_current_ubuntu cosmetic i386 libc6
-get_current_ubuntu cosmetic amd64 libc6
-get_current_ubuntu cosmetic amd64 libc6-i386
+get_current_ubuntu cosmic i386 libc6
+get_current_ubuntu cosmic amd64 libc6
+get_current_ubuntu cosmic amd64 libc6-i386
 
 get_all_ubuntu archive-eglibc http://security.ubuntu.com/ubuntu/pool/main/e/eglibc/
 get_all_ubuntu archive-glibc http://security.ubuntu.com/ubuntu/pool/main/g/glibc/
