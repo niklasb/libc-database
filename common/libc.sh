@@ -64,14 +64,14 @@ check_id() {
 get_ubuntu() {
   local url="$1"
   local info="$2"
-  local tmp=`mktemp -d || mktemp -d -t "libc-database" || die "Cannot get temp dir"`
+  local tmp=`mktemp -d`
   echo "Getting $info"
   echo "  -> Location: $url"
   local id=`echo $url | perl -n -e '/(libc6[^\/]*)\./ && print $1'`
   echo "  -> ID: $id"
   check_id $id || return
   echo "  -> Downloading package"
-  wget $url 2>/dev/null -O $tmp/pkg.deb || die "Failed to download package from $url"
+  wget "$url" 2>/dev/null -O $tmp/pkg.deb || die "Failed to download package from $url"
   echo "  -> Extracting package"
   pushd $tmp 1>/dev/null
   ar x pkg.deb || die "ar failed"

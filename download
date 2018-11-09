@@ -1,27 +1,32 @@
 #!/bin/bash
 cd "$(dirname "$0")"
+
 die() {
   echo >&2 $1
   exit 1
 }
-function usage() {
-  echo >&2 "Usage: $0 id [id ...]"
+
+usage() {
+  echo >&2 "Usage: $0 id"
   exit 2
 }
 
-function download_single() {
+download_single() {
   local id=$1
   echo "Getting $id"
-  if [ -d libs/$id ]; then
-    echo "  --> Downloaded before. Remove it to download again."
-    return
+  if [ -d "libs/$id" ]; then
+    die "  --> Downloaded before. Remove it to download again."
   fi
 
-  local url=`cat db/$1.url 2>/dev/null|| die "-> Invalid id"`
+  if [ ! -f "db/$1.url" ]; then
+    die "Invalid ID, maybe the library was fetched in an older version or added manually?"
+  fi
+
+  local url="$(cat "db/$1.url")"
   echo "  -> Location: $url"
-  local tmp=`mktemp -d || mktemp -d -t "libc-database" || die "Cannot get temp dir"`
+  local tmp=`mktemp -d`
   echo "  -> Downloading package"
-  wget $url 2>/dev/null -O $tmp/pkg.deb || die "Failed to download package from $url"
+  wget "$url" 2>/dev/null -O $tmp/pkg.deb || die "Failed to download package from $url"
   echo "  -> Extracting package"
 
   pushd $tmp 1>/dev/null
@@ -37,17 +42,7 @@ function download_single() {
   rm -rf $tmp
 }
 
-function download() {
-  [[ $# < 1 ]] && usage
-  id=$1; shift
-  if [[ $# == 0 ]]; then
-    download_single $id
-  else
-    comm -12 \
-      <(download_single $id) \
-      <(download "$@")
-  fi
-}
-
-download "$@"
-
+if [[ $# != 1 ]]; then
+  usage
+fi
+download_single "$1"
