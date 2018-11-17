@@ -23,9 +23,9 @@ get_current_ubuntu xenial amd64 libc6-i386
 #get_current_ubuntu zesty i386 libc6
 #get_current_ubuntu zesty amd64 libc6
 #get_current_ubuntu zesty amd64 libc6-i386
-get_current_ubuntu artful i386 libc6
-get_current_ubuntu artful amd64 libc6
-get_current_ubuntu artful amd64 libc6-i386
+#get_current_ubuntu artful i386 libc6
+#get_current_ubuntu artful amd64 libc6
+#get_current_ubuntu artful amd64 libc6-i386
 get_current_ubuntu bionic i386 libc6
 get_current_ubuntu bionic amd64 libc6
 get_current_ubuntu bionic amd64 libc6-i386
