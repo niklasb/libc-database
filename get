@@ -2,9 +2,9 @@
 cd "$(dirname "$0")"
 . common/libc.sh
 
-get_current_ubuntu trusty i386 libc6
-get_current_ubuntu trusty amd64 libc6
-get_current_ubuntu trusty amd64 libc6-i386
+#get_current_ubuntu trusty i386 libc6
+#get_current_ubuntu trusty amd64 libc6
+#get_current_ubuntu trusty amd64 libc6-i386
 #get_current_ubuntu utopic i386 libc6
 #get_current_ubuntu utopic amd64 libc6
 #get_current_ubuntu utopic amd64 libc6-i386
@@ -32,6 +32,9 @@ get_current_ubuntu bionic amd64 libc6-i386
 get_current_ubuntu cosmic i386 libc6
 get_current_ubuntu cosmic amd64 libc6
 get_current_ubuntu cosmic amd64 libc6-i386
+get_current_ubuntu disco i386 libc6
+get_current_ubuntu disco amd64 libc6
+get_current_ubuntu disco amd64 libc6-i386
 
 get_all_ubuntu archive-eglibc http://security.ubuntu.com/ubuntu/pool/main/e/eglibc/
 get_all_ubuntu archive-glibc http://security.ubuntu.com/ubuntu/pool/main/g/glibc/
