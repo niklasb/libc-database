@@ -95,8 +95,15 @@ get_current_debian_like() {
   local website=$5
   local info=$distro-$version-$arch-$pkg
   echo "Getting package location for $distro-$version-$arch"
-  local url=`(wget $website/$version/$arch/$pkg/download -O - 2>/dev/null \
-               | grep -oh 'http://[^"]*libc6[^"]*.deb') || die "Failed to get package version"`
+  local url=""
+  for i in $(seq 1 3); do
+    url=`(wget $website/$version/$arch/$pkg/download -O - 2>/dev/null \
+           | grep -oh 'http://[^"]*libc6[^"]*.deb')`
+    [[ -z "$url" ]] || break
+    echo "Retrying..."
+    sleep 1
+  done
+  [[ -n "$url" ]] || die "Failed to get package version"
   get_ubuntu $url $info
 }
 
