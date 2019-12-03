@@ -40,3 +40,15 @@ get_all_ubuntu archive-eglibc http://security.ubuntu.com/ubuntu/pool/main/e/egli
 get_all_ubuntu archive-glibc http://security.ubuntu.com/ubuntu/pool/main/g/glibc/
 get_all_ubuntu archive-old-eglibc http://old-releases.ubuntu.com/ubuntu/pool/main/e/eglibc/
 get_all_ubuntu archive-old-glibc http://old-releases.ubuntu.com/ubuntu/pool/main/g/glibc/
+
+debian_releases="
+jessie
+stretch
+buster
+bullseye
+"
+for debian_release in $debian_releases; do
+  get_current_debian "$debian_release" i386 libc6
+  get_current_debian "$debian_release" amd64 libc6
+  get_current_debian "$debian_release" amd64 libc6-i386
+done

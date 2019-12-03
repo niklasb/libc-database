@@ -87,15 +87,21 @@ get_ubuntu() {
   rm -rf $tmp
 }
 
-get_current_ubuntu() {
+get_current_debian_like() {
   local version=$1
   local arch=$2
   local pkg=$3
-  local info=ubuntu-$version-$arch-$pkg
-  echo "Getting package location for ubuntu-$version-$arch"
-  local url=`(wget http://packages.ubuntu.com/$version/$arch/$pkg/download -O - 2>/dev/null \
+  local distro=$4
+  local website=$5
+  local info=$distro-$version-$arch-$pkg
+  echo "Getting package location for $distro-$version-$arch"
+  local url=`(wget $website/$version/$arch/$pkg/download -O - 2>/dev/null \
                | grep -oh 'http://[^"]*libc6[^"]*.deb') || die "Failed to get package version"`
   get_ubuntu $url $info
+}
+
+get_current_ubuntu() {
+  get_current_debian_like "$@" "ubuntu" "http://packages.ubuntu.com"
 }
 
 get_all_ubuntu() {
@@ -104,6 +110,12 @@ get_all_ubuntu() {
   for f in `wget $url/ -O - 2>/dev/null | egrep -oh 'libc6(-i386|-amd64)?_[^"]*(amd64|i386)\.deb' |grep -v "</a>"`; do
     get_ubuntu $url/$f $1
   done
+}
+
+# ===== Debian ===== #
+
+get_current_debian() {
+  get_current_debian_like "$@" "debian" "https://packages.debian.org"
 }
 
 # ===== Local ===== #
