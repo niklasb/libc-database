@@ -94,7 +94,7 @@ get_current_debian_like() {
   local distro=$4
   local website=$5
   local info=$distro-$version-$arch-$pkg
-  echo "Getting package location for $distro-$version-$arch"
+  echo "Getting package $pkg location for $distro-$version-$arch"
   local url=""
   for i in $(seq 1 3); do
     url=`(wget $website/$version/$arch/$pkg/download -O - 2>/dev/null \
