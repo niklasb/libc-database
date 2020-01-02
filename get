@@ -2,39 +2,24 @@
 cd "$(dirname "$0")"
 . common/libc.sh
 
-#get_current_ubuntu trusty i386 libc6
-#get_current_ubuntu trusty amd64 libc6
-#get_current_ubuntu trusty amd64 libc6-i386
-#get_current_ubuntu utopic i386 libc6
-#get_current_ubuntu utopic amd64 libc6
-#get_current_ubuntu utopic amd64 libc6-i386
-#get_current_ubuntu vivid i386 libc6
-#get_current_ubuntu vivid amd64 libc6
-#get_current_ubuntu vivid amd64 libc6-i386
-#get_current_ubuntu wily i386 libc6
-#get_current_ubuntu wily amd64 libc6
-#get_current_ubuntu wily amd64 libc6-i386
-get_current_ubuntu xenial i386 libc6
-get_current_ubuntu xenial amd64 libc6
-get_current_ubuntu xenial amd64 libc6-i386
-#get_current_ubuntu yakkety i386 libc6
-#get_current_ubuntu yakkety amd64 libc6
-#get_current_ubuntu yakkety amd64 libc6-i386
-#get_current_ubuntu zesty i386 libc6
-#get_current_ubuntu zesty amd64 libc6
-#get_current_ubuntu zesty amd64 libc6-i386
-#get_current_ubuntu artful i386 libc6
-#get_current_ubuntu artful amd64 libc6
-#get_current_ubuntu artful amd64 libc6-i386
-get_current_ubuntu bionic i386 libc6
-get_current_ubuntu bionic amd64 libc6
-get_current_ubuntu bionic amd64 libc6-i386
-get_current_ubuntu cosmic i386 libc6
-get_current_ubuntu cosmic amd64 libc6
-get_current_ubuntu cosmic amd64 libc6-i386
-get_current_ubuntu disco i386 libc6
-get_current_ubuntu disco amd64 libc6
-get_current_ubuntu disco amd64 libc6-i386
+ubuntu_dists=(
+    xenial
+    bionic
+    disco
+    eoan
+    focal
+)
+ubuntu_archs=(
+    i386
+    libc6
+    libc6-i386
+)
+
+for dist in ${ubuntu_dists[@]}; do
+    get_current_ubuntu $dist amd64 libc6
+    get_current_ubuntu $dist amd64 libc6-i386
+    get_current_ubuntu $dist i386 libc6
+done
 
 get_all_ubuntu archive-eglibc http://security.ubuntu.com/ubuntu/pool/main/e/eglibc/
 get_all_ubuntu archive-glibc http://security.ubuntu.com/ubuntu/pool/main/g/glibc/
