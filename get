@@ -5,7 +5,6 @@ cd "$(dirname "$0")"
 ubuntu_versions=(
     xenial
     bionic
-    disco
     eoan
     focal
 )
