@@ -98,7 +98,7 @@ get_current_debian_like() {
   local url=""
   for i in $(seq 1 3); do
     url=`(wget $website/$version/$arch/$pkg/download -O - 2>/dev/null \
-           | grep -oh 'http://[^"]*libc6[^"]*.deb')`
+           | grep -oh 'http://[^"]*libc6[^"]*\.deb')`
     [[ -z "$url" ]] || break
     echo "Retrying..."
     sleep 1
