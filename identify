@@ -2,8 +2,36 @@
 cd "$(dirname "$0")"
 if [[ $# != 1 ]]; then
   echo >&2 "Usage: $0 path/to/libc.so"
+  echo >&2 "    OR $0 bid=<BUILD_ID>"
+  echo >&2 "    OR $0 md5=<MD5>"
+  echo >&2 "    OR $0 sha1=<SHA1>"
+  echo >&2 "    OR $0 sha256=<SHA256>"
   exit 2
 fi
-libc=$1
-sha1=`sha1sum $libc | awk '{print $1}'`
-sha1sum db/*.so | grep "$sha1 " | perl -n -e '/db\/(.*)\.so/&&print "id $1\n"'
+
+arg="$1"
+
+if [[ -f "$arg" ]]; then
+  libc=$arg
+  arg="sha1=$(sha1sum "$libc" | awk '{print $1}')"
+fi
+
+if [[ "$arg" == "bid="* ]] ; then
+  hash="${arg#"bid="}"
+  file db/*.so | grep "=$hash," | perl -n -e '/db\/(.*)\.so:.*/&&print "id $1\n"'
+else
+  if [[ "$arg" == "md5="* ]] ; then
+    hash="${arg#"md5="}"
+    md5sum db/*.so | grep "$hash " | perl -n -e '/db\/(.*)\.so/&&print "id $1\n"'
+  else
+    if [[ "$arg" == "sha1="* ]] ; then
+      hash="${arg#"sha1="}"
+      sha1sum db/*.so | grep "$hash " | perl -n -e '/db\/(.*)\.so/&&print "id $1\n"'
+    else
+      if [[ "$arg" == "sha256="* ]] ; then
+        hash="${arg#"sha256="}"
+        sha256sum db/*.so | grep "$hash " | perl -n -e '/db\/(.*)\.so/&&print "id $1\n"'
+      fi
+    fi
+  fi
+fi
