@@ -8,7 +8,7 @@ die() {
 }
 
 dump_symbols() {
-  readelf -Ws $1 | perl -n -e '/: (\w*).*?(\w+)@@GLIBC_/ && print "$2 $1\n"'
+  readelf -Ws $1 | perl -n -e '/: (\w*)[\s]*[\w]*[\s]*(FUNC|OBJECT)[\s]*[\w]*[\s]*[\w]*[\s]*[\w]*[\s]*(\w*)/ && print "$3 $1\n"'
 }
 
 extract_label() {
