@@ -13,6 +13,12 @@ database:
 
     $ ./get
 
+To get RPM versions, please put `cpio` in your PATH. To get better result,
+please install `zstd` and put `unzstd` in your PATH.
+
+Moreover, to extract Arch packages, you will need to have `unzstd` in your
+PATH.
+
 You can also add a custom libc to your database.
 
     $ ./add /usr/lib/libc-2.21.so

@@ -2,6 +2,7 @@
 cd "$(dirname "$0")"
 . common/libc.sh
 
+# Ubuntu
 get_all_debian ubuntu-eglibc http://archive.ubuntu.com/ubuntu/pool/main/e/eglibc/
 get_all_debian ubuntu-glibc http://archive.ubuntu.com/ubuntu/pool/main/g/glibc/
 get_all_debian ubuntu-security-eglibc http://security.ubuntu.com/ubuntu/pool/main/e/eglibc/
@@ -9,4 +10,22 @@ get_all_debian ubuntu-security-glibc http://security.ubuntu.com/ubuntu/pool/main
 get_all_debian ubuntu-old-eglibc http://old-releases.ubuntu.com/ubuntu/pool/main/e/eglibc/
 get_all_debian ubuntu-old-glibc http://old-releases.ubuntu.com/ubuntu/pool/main/g/glibc/
 
+# Debian
 get_all_debian debian-glibc https://deb.debian.org/debian/pool/main/g/glibc
+
+# Multiple RPM distro
+get_all_rpm rpm glibc x86_64
+get_all_rpm rpm glibc i586
+get_all_rpm rpm glibc i686
+
+# CentOS
+get_from_filelistgz centos-glibc http://mirror.centos.org/centos/ glibc i686
+get_from_filelistgz centos-glibc http://mirror.centos.org/centos/ glibc x86_64
+
+# Arch Linux
+get_all_pkg arch-glibc https://archive.archlinux.org/packages/g/glibc/
+get_all_pkg arch-lib32-glibc https://archive.archlinux.org/packages/l/lib32-glibc/
+
+# Pentest/DFIR OS 🙃
+get_all_debian kali-glibc https://http.kali.org/pool/main/g/glibc/
+get_all_debian parrotsec-glibc https://download.parrot.sh/parrot/pool/main/g/glibc/
