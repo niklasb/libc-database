@@ -23,20 +23,26 @@ fi
 case "$arg" in
   bid=*)
     hash="${arg#"bid="}"
-    file db/*.so | grep "=$hash," | perl -n -e '/db\/(.*)\.so:.*/&&print "id $1\n"'
+    tool="file"
+    regex="=$hash,"
     ;;
   md5=*)
     hash="${arg#"md5="}"
-    md5sum db/*.so | grep "$hash " | perl -n -e '/db\/(.*)\.so/&&print "id $1\n"'
+    tool="md5sum"
+    regex="$hash "
     ;;
   sha1=*)
     hash="${arg#"sha1="}"
-    sha1sum db/*.so | grep "$hash " | perl -n -e '/db\/(.*)\.so/&&print "id $1\n"'
+    tool="sha1sum"
+    regex="$hash "
     ;;
   sha256=*)
     hash="${arg#"sha256="}"
-    sha256sum db/*.so | grep "$hash " | perl -n -e '/db\/(.*)\.so/&&print "id $1\n"'
+    tool="sha256sum"
+    regex="$hash "
     ;;
   *)
     help
 esac
+
+ls -1 db/*.so | xargs $tool | grep -- "$regex" | perl -n -e '/db\/(.*)\.so:.*/&&print "id $1\n"'
