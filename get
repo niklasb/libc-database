@@ -13,12 +13,15 @@ ubuntu() {
   get_all_debian ubuntu-eglibc http://archive.ubuntu.com/ubuntu/pool/main/e/eglibc/ libc6
   get_all_debian ubuntu-glibc http://archive.ubuntu.com/ubuntu/pool/main/g/glibc/ libc6
   get_all_debian ubuntu-musl http://archive.ubuntu.com/ubuntu/pool/universe/m/musl/ musl
+  get_all_debian ubuntu-dietlibc http://archive.ubuntu.com/ubuntu/pool/universe/d/dietlibc/ dietlibc
   get_all_debian ubuntu-security-eglibc http://security.ubuntu.com/ubuntu/pool/main/e/eglibc/ libc6
   get_all_debian ubuntu-security-glibc http://security.ubuntu.com/ubuntu/pool/main/g/glibc/ libc6
   get_all_debian ubuntu-security-musl http://security.ubuntu.com/ubuntu/pool/universe/m/musl/ musl
+  get_all_debian ubuntu-security-dietlibc http://security.ubuntu.com/ubuntu/pool/universe/d/dietlibc/ dietlibc
   get_all_debian ubuntu-old-eglibc http://old-releases.ubuntu.com/ubuntu/pool/main/e/eglibc/ libc6
   get_all_debian ubuntu-old-glibc http://old-releases.ubuntu.com/ubuntu/pool/main/g/glibc/ libc6
   get_all_debian ubuntu-old-musl http://old-releases.ubuntu.com/ubuntu/pool/universe/m/musl/ musl
+  get_all_debian ubuntu-old-dietlibc http://old-releases.ubuntu.com/ubuntu/pool/universe/d/dietlibc/ dietlibc
 }
 
 categories[cntr_category]="debian"
@@ -27,6 +30,7 @@ cntr_category=$((cntr_category + 1))
 debian() {
   get_all_debian debian-glibc https://deb.debian.org/debian/pool/main/g/glibc/ libc6
   get_all_debian debian-musl https://deb.debian.org/debian/pool/main/m/musl/ musl
+  get_all_debian debian-dietlibc https://deb.debian.org/debian/pool/main/d/dietlibc/ dietlibc
 }
 
 categories[cntr_category]="rpm"
