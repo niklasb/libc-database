@@ -17,7 +17,7 @@ works on page size level.
     $ ./find printf 260 puts f30
     archive-glibc (id libc6_2.19-10ubuntu2_i386)
 
-Find a libc from the leaked return address into __libc_start_main.
+Find a libc from the leaked return address into `__libc_start_main`.
 
     $ ./find __libc_start_main_ret a83
     ubuntu-trusty-i386-libc6 (id libc6_2.19-0ubuntu6.6_i386)
