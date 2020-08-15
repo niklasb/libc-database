@@ -136,6 +136,16 @@ In addition of RPM-Based requirements, you will need:
 * tar
 
 
+### APK Based
+
+* mktemp
+* perl
+* wget
+* tar
+* gzip
+* grep
+
+
 ### Install everything
 
 To install everything on Debian 10, run these commands:

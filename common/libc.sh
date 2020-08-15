@@ -293,6 +293,67 @@ requirements_pkg() {
   return 0
 }
 
+
+# ===== Alpine ===== #
+
+get_apk() {
+  local url="$1"
+  local info="$2"229
+  local pkgname="$3"
+  local tmp=$(mktemp -d)
+  echo "Getting $info"
+  echo "  -> Location: $url"
+  local id=$(echo "$url" | perl -n -e '/('"$pkgname"'[^\/]*)\.apk/ && print $1')
+  echo "  -> ID: $id"
+  check_id $id || return
+  echo "  -> Downloading package"
+  wget "$url" 2>/dev/null -O "$tmp/pkg.tar.gz" || die "Failed to download package from $url"
+  echo "  -> Extracting package"
+  pushd $tmp 1>/dev/null
+  tar xzf pkg.tar.gz --warning=none
+  popd 1>/dev/null
+  index_libc "$tmp" "$id" "$info" "$url"
+  rm -rf $tmp
+}
+
+get_all_apk() {
+  local info=$1
+  local repo=$2
+  local version=$3
+  local component=$4
+  local arch=$5
+  local pkgname=$6
+  local directory="$repo/$version/$component/$arch/"
+  echo "Getting package $info locations"
+  local url=""
+  for i in $(seq 1 3); do
+    urls=$(wget "$directory" -O - 2>/dev/null \
+      | grep -oh '[^"]*'"$pkgname"'-[0-9][^"]*\.apk' \
+      | grep -v '.sig' \
+      | grep -v '>')
+    [[ -z "$urls" ]] || break
+    echo "Retrying..."
+    sleep 1
+  done
+  [[ -n "$urls" ]] || die "Failed to get package version"
+  for url in $urls
+  do
+    get_apk "$directory$url" "$info" "$pkgname"
+    sleep .1
+  done
+}
+
+requirements_apk() {
+  which mktemp 1>/dev/null 2>&1 || return
+  which perl   1>/dev/null 2>&1 || return
+  which wget   1>/dev/null 2>&1 || return
+  which tar    1>/dev/null 2>&1 || return
+  which gzip    1>/dev/null 2>&1 || return
+  which grep   1>/dev/null 2>&1 || return
+  return 0
+}
+
+
 # ===== Local ===== #
 
 add_local() {

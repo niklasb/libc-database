@@ -58,6 +58,34 @@ arch() {
   get_all_pkg arch-musl https://archive.archlinux.org/packages/m/musl/ musl
 }
 
+categories[cntr_category]="alpine"
+requirements["alpine"]="requirements_apk"
+cntr_category=$((cntr_category + 1))
+alpine() {
+  alpine_versions=(
+      latest-stable
+      edge
+      v3.0
+      v3.1
+      v3.2
+      v3.3
+      v3.4
+      v3.5
+      v3.6
+      v3.7
+      v3.8
+      v3.9
+      v3.10
+      v3.11
+      v3.12
+  )
+
+  for version in "${alpine_versions[@]}"; do
+    get_all_apk alpine-musl http://dl-cdn.alpinelinux.org/alpine/ "$version" main x86_64 musl
+    get_all_apk alpine-musl http://dl-cdn.alpinelinux.org/alpine/ "$version" main x86 musl
+  done
+}
+
 categories[cntr_category]="kali"
 requirements["kali"]="requirements_debian"
 cntr_category=$((cntr_category + 1))
