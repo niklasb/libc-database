@@ -41,6 +41,18 @@ Check whether a library is already in the database.
     $ ./identify /usr/lib/libc.so.6
     id local-f706181f06104ef6c7008c066290ea47aa4a82c5
 
+Or find a libc using a hash (currently BuildID, MD5, SHA1 and SHA256 is
+implemented)
+
+    $ ./identify bid=ebeabf5f7039f53748e996fc976b4da2d486a626
+    id libc6_2.17-93ubuntu4_i386
+    $ ./identify md5=af7c40da33c685d67cdb166bd6ab7ac0
+    id libc6_2.17-93ubuntu4_i386
+    $ ./identify sha1=9054f5cb7969056b6816b1e2572f2506370940c4
+    id libc6_2.17-93ubuntu4_i386
+    $ ./identify sha256=8dc102c06c50512d1e5142ce93a6faf4ec8b6f5d9e33d2e1b45311aef683d9b2
+    id libc6_2.17-93ubuntu4_i386
+
 Download the whole libs corresponding to a libc ID.
 
     $ ./download libc6_2.23-0ubuntu10_amd64
