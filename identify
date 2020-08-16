@@ -1,9 +1,48 @@
 #!/bin/bash
 cd "$(dirname "$0")"
-if [[ $# != 1 ]]; then
+help() {
   echo >&2 "Usage: $0 path/to/libc.so"
+  echo >&2 "    OR $0 bid=<BUILD_ID>"
+  echo >&2 "    OR $0 md5=<MD5>"
+  echo >&2 "    OR $0 sha1=<SHA1>"
+  echo >&2 "    OR $0 sha256=<SHA256>"
   exit 2
+}
+
+if [[ $# != 1 ]]; then
+  help
 fi
-libc=$1
-sha1=`sha1sum $libc | awk '{print $1}'`
-sha1sum db/*.so | grep "$sha1 " | perl -n -e '/db\/(.*)\.so/&&print "id $1\n"'
+
+arg="$1"
+
+if [[ -f "$arg" ]]; then
+  libc=$arg
+  arg="sha1=$(sha1sum "$libc" | awk '{print $1}')"
+fi
+
+case "$arg" in
+  bid=*)
+    hash="${arg#"bid="}"
+    tool="file"
+    regex="=$hash,"
+    ;;
+  md5=*)
+    hash="${arg#"md5="}"
+    tool="md5sum"
+    regex="$hash "
+    ;;
+  sha1=*)
+    hash="${arg#"sha1="}"
+    tool="sha1sum"
+    regex="$hash "
+    ;;
+  sha256=*)
+    hash="${arg#"sha256="}"
+    tool="sha256sum"
+    regex="$hash "
+    ;;
+  *)
+    help
+esac
+
+ls -1 db/*.so | xargs $tool | grep -- "$regex" | perl -n -e '/db\/(.*)\.so:.*/&&print "id $1\n"'
