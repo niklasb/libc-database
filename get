@@ -2,11 +2,11 @@
 cd "$(dirname "$0")"
 . common/libc.sh
 
-get_all_ubuntu ubuntu-eglibc http://archive.ubuntu.com/ubuntu/pool/main/e/eglibc/
-get_all_ubuntu ubuntu-glibc http://archive.ubuntu.com/ubuntu/pool/main/g/glibc/
-get_all_ubuntu ubuntu-security-eglibc http://security.ubuntu.com/ubuntu/pool/main/e/eglibc/
-get_all_ubuntu ubuntu-security-glibc http://security.ubuntu.com/ubuntu/pool/main/g/glibc/
-get_all_ubuntu ubuntu-old-eglibc http://old-releases.ubuntu.com/ubuntu/pool/main/e/eglibc/
-get_all_ubuntu ubuntu-old-glibc http://old-releases.ubuntu.com/ubuntu/pool/main/g/glibc/
+get_all_debian ubuntu-eglibc http://archive.ubuntu.com/ubuntu/pool/main/e/eglibc/
+get_all_debian ubuntu-glibc http://archive.ubuntu.com/ubuntu/pool/main/g/glibc/
+get_all_debian ubuntu-security-eglibc http://security.ubuntu.com/ubuntu/pool/main/e/eglibc/
+get_all_debian ubuntu-security-glibc http://security.ubuntu.com/ubuntu/pool/main/g/glibc/
+get_all_debian ubuntu-old-eglibc http://old-releases.ubuntu.com/ubuntu/pool/main/e/eglibc/
+get_all_debian ubuntu-old-glibc http://old-releases.ubuntu.com/ubuntu/pool/main/g/glibc/
 
-get_all_ubuntu debian-glibc https://deb.debian.org/debian/pool/main/g/glibc
+get_all_debian debian-glibc https://deb.debian.org/debian/pool/main/g/glibc
