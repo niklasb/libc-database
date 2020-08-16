@@ -2,32 +2,11 @@
 cd "$(dirname "$0")"
 . common/libc.sh
 
-ubuntu_versions=(
-    xenial
-    bionic
-    eoan
-    focal
-)
+get_all_debian ubuntu-eglibc http://archive.ubuntu.com/ubuntu/pool/main/e/eglibc/
+get_all_debian ubuntu-glibc http://archive.ubuntu.com/ubuntu/pool/main/g/glibc/
+get_all_debian ubuntu-security-eglibc http://security.ubuntu.com/ubuntu/pool/main/e/eglibc/
+get_all_debian ubuntu-security-glibc http://security.ubuntu.com/ubuntu/pool/main/g/glibc/
+get_all_debian ubuntu-old-eglibc http://old-releases.ubuntu.com/ubuntu/pool/main/e/eglibc/
+get_all_debian ubuntu-old-glibc http://old-releases.ubuntu.com/ubuntu/pool/main/g/glibc/
 
-for version in ${ubuntu_versions[@]}; do
-    get_current_ubuntu $version amd64 libc6
-    get_current_ubuntu $version amd64 libc6-i386
-    get_current_ubuntu $version i386 libc6
-done
-
-get_all_ubuntu archive-eglibc http://security.ubuntu.com/ubuntu/pool/main/e/eglibc/
-get_all_ubuntu archive-glibc http://security.ubuntu.com/ubuntu/pool/main/g/glibc/
-get_all_ubuntu archive-old-eglibc http://old-releases.ubuntu.com/ubuntu/pool/main/e/eglibc/
-get_all_ubuntu archive-old-glibc http://old-releases.ubuntu.com/ubuntu/pool/main/g/glibc/
-
-debian_versions=(
-    jessie
-    stretch
-    buster
-    bullseye
-)
-for version in ${debian_versions[@]}; do
-  get_current_debian $version i386 libc6
-  get_current_debian $version amd64 libc6
-  get_current_debian $version amd64 libc6-i386
-done
+get_all_debian debian-glibc https://deb.debian.org/debian/pool/main/g/glibc
