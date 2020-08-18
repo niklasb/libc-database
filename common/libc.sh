@@ -18,12 +18,12 @@ extract_label() {
 
 dump_libc_start_main_ret() {
   local call_main=`objdump -D $1 \
-    | egrep -A 100 '<__libc_start_main.*>' \
+    | grep -EA 100 '<__libc_start_main.*>' \
     | grep call \
-    | egrep -B 1 '<exit.*>' \
+    | grep -EB 1 '<exit.*>' \
     | head -n 1 \
     | extract_label`
-  local offset=`objdump -D $1 | egrep -A 1 "(^| )$call_main:" | tail -n 1 | extract_label`
+  local offset=`objdump -D $1 | grep -EA 1 "(^| )$call_main:" | tail -n 1 | extract_label`
   if [[ "$offset" != "" ]]; then
     echo "__libc_start_main_ret $offset"
   fi
@@ -107,7 +107,7 @@ get_debian() {
 get_all_debian() {
   local info=$1
   local url=$2
-  for f in `wget $url/ -O - 2>/dev/null | egrep -oh 'libc6(-i386|-amd64)?_[^"]*(amd64|i386)\.deb' |grep -v "</a>"`; do
+  for f in `wget $url/ -O - 2>/dev/null | grep -Eoh 'libc6(-i386|-amd64)?_[^"]*(amd64|i386)\.deb' |grep -v "</a>"`; do
     get_debian $url/$f $1
   done
 }
