@@ -168,7 +168,7 @@ get_from_filelistgz() {
   local url=""
   for i in $(seq 1 3); do
     urls=$(wget "$website/filelist.gz" -O - 2>/dev/null \
-      | zcat \
+      | gzip -cd \
       | grep -h "$pkg-[0-9]" \
       | grep -h "$arch\.rpm")
     [[ -z "$urls" ]] || break
