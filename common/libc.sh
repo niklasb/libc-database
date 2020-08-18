@@ -1,5 +1,4 @@
 #!/bin/bash
-rpm2cpio=$(command -v rpm2cpio 2>/dev/null || echo "$PWD/rpm2cpio")
 
 mkdir -p db
 
@@ -127,7 +126,7 @@ get_rpm() {
   wget "$url" 2>/dev/null -O "$tmp/pkg.rpm" || die "Failed to download package from $url"
   echo "  -> Extracting package"
   pushd "$tmp" 1>/dev/null
-  ($rpm2cpio pkg.rpm || die "rpm2cpio failed") | \
+  (rpm2cpio pkg.rpm || die "rpm2cpio failed") | \
     (cpio -id --quiet || die "cpio failed")
   popd 1>/dev/null
   index_libc "$tmp" "$id" "$info" "$url"
