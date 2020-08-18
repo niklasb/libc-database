@@ -53,7 +53,7 @@ process_libc() {
 check_id() {
   local id=$1
   if [[ -e db/${id}.info ]]; then
-    echo "  -> Already have this version, 'rm db/${id}.*' to force"
+    echo "  -> Already have this version, 'rm ${PWD}/db/${id}.*' to force"
     return 1
   fi
   return 0
