@@ -93,6 +93,7 @@ get_all_debian() {
   for f in `wget $url/ -O - 2>/dev/null | egrep -oh 'libc6(-i386|-amd64)?_[^"]*(amd64|i386)\.deb' |grep -v "</a>"`; do
     get_debian $url/$f $1
   done
+  return 0
 }
 
 # ===== Local ===== #
