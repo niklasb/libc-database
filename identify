@@ -45,4 +45,4 @@ case "$arg" in
     help
 esac
 
-ls -1 db/*.so | xargs $tool | grep -- "$regex" | perl -n -e '/db\/(.*)\.so:.*/&&print "id $1\n"'
+ls -1 db/*.so | xargs $tool | grep -- "$regex" | perl -n -e '/db\/([^ ]*)\.so/&&print "id $1\n"'
