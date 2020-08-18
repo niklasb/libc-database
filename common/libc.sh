@@ -81,6 +81,16 @@ check_id() {
   return 0
 }
 
+requirements_general() {
+  which readelf 1>/dev/null 2>&1 || return
+  which perl    1>/dev/null 2>&1 || return
+  which objdump 1>/dev/null 2>&1 || return
+  which strings 1>/dev/null 2>&1 || return
+  which find    1>/dev/null 2>&1 || return
+  which grep    1>/dev/null 2>&1 || return
+  return 0
+}
+
 # ===== Debian-like ===== #
 
 get_debian() {
@@ -109,6 +119,16 @@ get_all_debian() {
   for f in `wget $url/ -O - 2>/dev/null | grep -Eoh 'libc6(-i386|-amd64)?_[^"]*(amd64|i386)\.deb' |grep -v "</a>"`; do
     get_debian $url/$f $1
   done
+}
+
+requirements_debian() {
+  which mktemp 1>/dev/null 2>&1 || return
+  which perl   1>/dev/null 2>&1 || return
+  which wget   1>/dev/null 2>&1 || return
+  which ar     1>/dev/null 2>&1 || return
+  which tar    1>/dev/null 2>&1 || return
+  which grep   1>/dev/null 2>&1 || return
+  return 0
 }
 
 # ===== RPM ===== #
@@ -156,6 +176,16 @@ get_all_rpm() {
   done
 }
 
+requirements_rpm() {
+  which mktemp   1>/dev/null 2>&1 || return
+  which perl     1>/dev/null 2>&1 || return
+  which wget     1>/dev/null 2>&1 || return
+  which rpm2cpio || return
+  which cpio     1>/dev/null 2>&1 || return
+  which grep     1>/dev/null 2>&1 || return
+  return 0
+}
+
 # ===== CentOS ===== #
 
 get_from_filelistgz() {
@@ -181,6 +211,15 @@ get_from_filelistgz() {
     sleep .1
   done
 }
+
+requirements_centos() {
+  which wget       1>/dev/null 2>&1 || return
+  which gzip       1>/dev/null 2>&1 || return
+  which grep       1>/dev/null 2>&1 || return
+  requirements_rpm || return
+  return 0
+}
+
 
 # ===== Arch ===== #
 
@@ -235,6 +274,19 @@ get_all_pkg() {
   done
 }
 
+requirements_pkg() {
+  which mktemp 1>/dev/null 2>&1 || return
+  which perl   1>/dev/null 2>&1 || return
+  which grep   1>/dev/null 2>&1 || return
+  which sed    1>/dev/null 2>&1 || return
+  which cat    1>/dev/null 2>&1 || return
+  which wget   1>/dev/null 2>&1 || return
+  which zstd   1>/dev/null 2>&1 || return
+  which tar    1>/dev/null 2>&1 || return
+  which xz     1>/dev/null 2>&1 || return
+  return 0
+}
+
 # ===== Local ===== #
 
 add_local() {
@@ -245,4 +297,9 @@ add_local() {
   echo "Adding local libc $libc (id $id)"
   check_id $id || return
   process_libc $libc $id $info
+}
+
+requirements_local() {
+  which sha1sum 1>/dev/null 2>&1 || return
+  return 0
 }

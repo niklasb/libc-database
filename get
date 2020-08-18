@@ -2,30 +2,105 @@
 cd "$(dirname "$0")"
 . common/libc.sh
 
-# Ubuntu
-get_all_debian ubuntu-eglibc http://archive.ubuntu.com/ubuntu/pool/main/e/eglibc/
-get_all_debian ubuntu-glibc http://archive.ubuntu.com/ubuntu/pool/main/g/glibc/
-get_all_debian ubuntu-security-eglibc http://security.ubuntu.com/ubuntu/pool/main/e/eglibc/
-get_all_debian ubuntu-security-glibc http://security.ubuntu.com/ubuntu/pool/main/g/glibc/
-get_all_debian ubuntu-old-eglibc http://old-releases.ubuntu.com/ubuntu/pool/main/e/eglibc/
-get_all_debian ubuntu-old-glibc http://old-releases.ubuntu.com/ubuntu/pool/main/g/glibc/
+cntr_category=1
+declare -a categories
+declare -A requirements
 
-# Debian
-get_all_debian debian-glibc https://deb.debian.org/debian/pool/main/g/glibc
+categories[cntr_category]="ubuntu"
+requirements["ubuntu"]="requirements_debian"
+cntr_category=$((cntr_category + 1))
+ubuntu() {
+  get_all_debian ubuntu-eglibc http://archive.ubuntu.com/ubuntu/pool/main/e/eglibc/
+  get_all_debian ubuntu-glibc http://archive.ubuntu.com/ubuntu/pool/main/g/glibc/
+  get_all_debian ubuntu-security-eglibc http://security.ubuntu.com/ubuntu/pool/main/e/eglibc/
+  get_all_debian ubuntu-security-glibc http://security.ubuntu.com/ubuntu/pool/main/g/glibc/
+  get_all_debian ubuntu-old-eglibc http://old-releases.ubuntu.com/ubuntu/pool/main/e/eglibc/
+  get_all_debian ubuntu-old-glibc http://old-releases.ubuntu.com/ubuntu/pool/main/g/glibc/
+}
 
-# Multiple RPM distro
-get_all_rpm rpm glibc x86_64
-get_all_rpm rpm glibc i586
-get_all_rpm rpm glibc i686
+categories[cntr_category]="debian"
+requirements["debian"]="requirements_debian"
+cntr_category=$((cntr_category + 1))
+debian() {
+  get_all_debian debian-glibc https://deb.debian.org/debian/pool/main/g/glibc
+}
 
-# CentOS
-get_from_filelistgz centos-glibc http://mirror.centos.org/centos/ glibc i686
-get_from_filelistgz centos-glibc http://mirror.centos.org/centos/ glibc x86_64
+categories[cntr_category]="rpm"
+requirements["rpm"]="requirements_rpm"
+cntr_category=$((cntr_category + 1))
+rpm() {
+  get_all_rpm rpm glibc x86_64
+  get_all_rpm rpm glibc i586
+  get_all_rpm rpm glibc i686
+}
 
-# Arch Linux
-get_all_pkg arch-glibc https://archive.archlinux.org/packages/g/glibc/
-get_all_pkg arch-lib32-glibc https://archive.archlinux.org/packages/l/lib32-glibc/
+categories[cntr_category]="centos"
+requirements["centos"]="requirements_centos"
+cntr_category=$((cntr_category + 1))
+centos() {
+  get_from_filelistgz centos-glibc http://mirror.centos.org/centos/ glibc i686
+  get_from_filelistgz centos-glibc http://mirror.centos.org/centos/ glibc x86_64
+}
 
-# Pentest/DFIR OS 🙃
-get_all_debian kali-glibc https://http.kali.org/pool/main/g/glibc/
-get_all_debian parrotsec-glibc https://download.parrot.sh/parrot/pool/main/g/glibc/
+categories[cntr_category]="arch"
+requirements["arch"]="requirements_pkg"
+cntr_category=$((cntr_category + 1))
+arch() {
+  get_all_pkg arch-glibc https://archive.archlinux.org/packages/g/glibc/
+  get_all_pkg arch-lib32-glibc https://archive.archlinux.org/packages/l/lib32-glibc/
+}
+
+categories[cntr_category]="kali"
+requirements["kali"]="requirements_debian"
+cntr_category=$((cntr_category + 1))
+kali() {
+  get_all_debian kali-glibc https://http.kali.org/pool/main/g/glibc/
+}
+categories[cntr_category]="parrotsec"
+requirements["parrotsec"]="requirements_debian"
+cntr_category=$((cntr_category + 1))
+parrotsec() {
+  get_all_debian parrotsec-glibc https://download.parrot.sh/parrot/pool/main/g/glibc/
+}
+
+
+help() {
+  exec 1>&2
+  echo "Please specify libc categories to download:"
+  for category in "${categories[@]}" ; do
+    echo -e "\t* $category"
+  done
+  echo ""
+  echo "You may also specify 'all' to download all categories available."
+  echo ""
+  echo "Example:"
+  echo ""
+  echo "$ ./get ubuntu rpm arch"
+  echo "$ ./get all"
+  exit 1
+}
+
+if [[ "$#" -eq 0 ]] ; then
+  help
+fi
+if [[ " $@ " == *" all "* ]] ; then
+  set -- "${categories[@]}"
+fi
+
+# Verify arguments, requirements, and display a recap
+requirements_general || die "General requirements are not met. Please, refer to README.md for installation instructions"
+echo "Will download or update for:"
+for category in "$@" ; do
+  if [[ ! " ${categories[@]} " == *" ${category} "* ]] ; then
+    die "Invalid category '$category'"
+  fi
+  ${requirements[$category]} || die "Requirements for download or update '$category' are not met. Please, refer to README.md for installation instructions"
+  echo -e "\t* $category ; Requirements are met"
+done
+
+
+# Let's start :)
+for category in "$@" ; do
+  echo "Downloading/updating $category"
+  $category
+done

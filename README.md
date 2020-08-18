@@ -5,19 +5,89 @@ try it out! Read https://github.com/niklasb/libc-database/tree/master/searchengi
 if you are interested in the API.
 
 
+## Requirements
+
+### General
+
+To run these scripts, you will need following command on your PATH:
+
+* readelf
+* objdump
+* strings
+* perl
+* find
+* grep
+* md5sum
+* sha1sum
+* sha256sum
+* file
+
+
+### Debian-based (Ubuntu, Debian, Kali Linux, ParrotSec)
+
+* mktemp
+* perl
+* wget
+* ar
+* tar
+* grep
+
+
+### RPM-based (category 'rpm')
+
+* mktemp
+* perl
+* wget
+* rpm2cpio
+* cpio
+* grep
+
+
+### CentOS-based
+
+In addition of RPM-Based requirements, you will need:
+
+* wget
+* gzip
+* grep
+
+
+### Pacman-based
+
+* mktemp
+* perl
+* grep
+* sed
+* cat
+* wget
+* zstd
+* xz-utils
+* tar
+
+
+### Install everything
+
+To install everything on Debian 10, run these commands:
+
+```sh
+apt-get update
+apt-get install -y \
+  binutils file \
+  wget \
+  rpm2cpio cpio \
+  zstd
+```
+
+
 ## Building a libc offset database
 
-Fetch all the configured libc versions and extract the symbol offsets.
+Fetch the desired libc categories and extract the symbol offsets.
 It will not download anything twice, so you can also use it to update your
 database:
 
-    $ ./get
-
-To get RPM versions, please put `cpio` in your PATH. To get better result,
-please install `zstd` and put `unzstd` in your PATH.
-
-Moreover, to extract Arch packages, you will need to have `unzstd` in your
-PATH.
+    $ ./get  # List categories
+    $ ./get ubuntu debian  # Download Ubuntu's and Debian's libc, old default behavior
+    $ ./get all  # Download all categories. Can take a while!
 
 You can also add a custom libc to your database.
 
