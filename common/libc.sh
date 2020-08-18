@@ -1,7 +1,5 @@
 #!/bin/bash
-# From https://stackoverflow.com/a/246128
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-rpm2cpio=$(command -v rpm2cpio 2>/dev/null || echo "$DIR/../rpm2cpio")
+rpm2cpio=$(command -v rpm2cpio 2>/dev/null || echo "$PWD/rpm2cpio")
 
 mkdir -p db
 
@@ -119,7 +117,7 @@ get_all_debian() {
 get_rpm() {
   local url="$1"
   local info="$2"
-  local tmp=$(mktemp -d)
+  local tmp="$(mktemp -d)"
   echo "Getting $info"
   echo "  -> Location: $url"
   local id=$(echo "$url" | perl -n -e '/(libc[^\/]*)\./ && print $1')
@@ -190,7 +188,7 @@ get_from_filelistgz() {
 get_pkg() {
   local url="$1"
   local info="$2"
-  local tmp=$(mktemp -d)
+  local tmp="$(mktemp -d)"
   echo "Getting $info"
   echo "  -> Location: $url"
   local id=$(echo "$url" | perl -n -e '/(libc[^\/]*)\.pkg\.tar\.(xz|zst)/ && print $1' | ( (echo "$url" | grep -q 'lib32') && sed 's/x86_64/x86/g' || cat))
