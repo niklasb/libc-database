@@ -201,7 +201,7 @@ get_pkg() {
   if (echo "$url" | grep -q '\.zst')
   then
     mv pkg pkg.tar.zst
-    unzstd -q pkg.tar.zst
+    zstd -dq pkg.tar.zst
     tar xf pkg.tar --warning=none
   fi
   if (echo "$url" | grep -q '\.xz')
