@@ -1,3 +1,4 @@
 elasticsearch
 connexion
 uwsgi
+flask-cors

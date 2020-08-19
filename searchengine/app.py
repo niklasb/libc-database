@@ -3,6 +3,7 @@ from functools import lru_cache
 
 import connexion
 from elasticsearch import Elasticsearch
+from flask_cors import CORS
 
 import config
 
@@ -93,7 +94,7 @@ def dump(id, body):
 
 app = connexion.App(__name__, specification_dir='.')
 app.add_api('api.yml')
-
+CORS(app.app)
 
 if __name__ == '__main__':
     app.run(port=8080, host='127.0.0.1', debug=True)
