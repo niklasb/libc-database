@@ -1,3 +1,10 @@
+## Web interface
+
+libc-database now has a web service and frontend. Visit https://libc.rip/ to
+try it out! Read https://github.com/niklasb/libc-database/tree/master/searchengine
+if you are interested in the API.
+
+
 ## Building a libc offset database
 
 Fetch all the configured libc versions and extract the symbol offsets.
