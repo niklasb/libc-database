@@ -1,0 +1,92 @@
+openapi: 3.0.3
+info:
+  version: 1.0.0
+  title: libc-database search engine
+  description: ''
+paths:
+  /find:
+    post:
+      operationId: app.find
+      tags:
+      - libcsearch
+      description: |-
+        Look up libc by various attributes
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Libc'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Libc'
+          description: ''
+
+  /libc/{id}:
+    post:
+      operationId: app.dump
+      tags:
+      - libcsearch
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      description: |-
+        Dump libc symbols
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DumpRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Libc'
+          description: ''
+
+components:
+  schemas:
+    Libc:
+      type: object
+      properties:
+        md5:
+          type: string
+        sha1:
+          type: string
+        sha256:
+          type: string
+        buildid:
+          type: string
+        id:
+          type: string
+        symbols:
+          type: object
+          additionalProperties:
+            type: string
+            pattern: '^(0x)?[a-fA-F0-9]+$'
+        download_url:
+          type: string
+          format: url
+          readOnly: true
+
+    DumpRequest:
+      type: object
+      properties:
+        symbols:
+          type: array
+          items:
+            type: string
+
+
+servers:
+  - url: https://libc.rip/api
