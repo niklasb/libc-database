@@ -10,6 +10,9 @@ from datetime import datetime
 from elasticsearch import Elasticsearch
 from subprocess import check_output, DEVNULL
 
+import config
+
+
 log = logging.getLogger('indexer')
 
 
@@ -29,7 +32,7 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
 
     p = argparse.ArgumentParser()
-    p.add_argument('--index', default='test-index')
+    p.add_argument('--index', default=config.ES_INDEX_NAME)
     p.add_argument('--fresh', action='store_true')
     p.add_argument('dir')
     args = p.parse_args()
@@ -37,7 +40,7 @@ if __name__ == '__main__':
     es = Elasticsearch()
 
     if args.fresh:
-        es.indices.delete(args.index)
+        es.indices.delete(args.index, ignore=[404])
 
     es.indices.create(args.index, ignore=[400])
     es.indices.put_mapping(index=args.index, doc_type='libc', body={
@@ -100,9 +103,9 @@ if __name__ == '__main__':
     es.indices.refresh(index=args.index)
 
     # res = es.search(index=args.index, body={"query": {"match": {"sha1": "102be3798e5d42044fb6b8f072ef609ef33ee5bf"}}})
-    res = es.search(index=args.index, body={"query": {"match": {"buildid": "28a5cf977adc27c69ca78bedd595096dd1977a7d"}}})
+    # res = es.search(index=args.index, body={"query": {"match": {"buildid": "28a5cf977adc27c69ca78bedd595096dd1977a7d"}}})
     # res = es.search(index=args.index, body={"query": {"term": {"symbols": "faccessat@190"}}})
-    print("Got %d Hits:" % res['hits']['total']['value'])
-    for hit in res['hits']['hits']:
-        s = hit['_source']
-        print(f"Found {s['id']}")
+    # print("Got %d Hits:" % res['hits']['total']['value'])
+    # for hit in res['hits']['hits']:
+        # s = hit['_source']
+        # print(f"Found {s['id']}")

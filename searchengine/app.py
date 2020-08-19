@@ -1,3 +1,4 @@
+import logging
 from functools import lru_cache
 
 import connexion
@@ -6,7 +7,10 @@ from elasticsearch import Elasticsearch
 import config
 
 
-es = Elasticsearch()
+es = Elasticsearch(hosts=[config.ES_HOST])
+log = logging.getLogger('wsgi')
+
+log.info(f'Using elasticsearch server {config.ES_HOST}, index {config.ES_INDEX_NAME}')
 
 
 @lru_cache(maxsize=2000)
