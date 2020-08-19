@@ -11,6 +11,11 @@ services:
       - 127.0.0.1:8000:8000
     networks:
       - libcsearch
+    restart: always
+    logging:
+      driver: syslog
+      options:
+        tag: uwsgi
 
   es01:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.9.0
@@ -30,6 +35,12 @@ services:
       - 127.0.0.1:9200:9200
     networks:
       - libcsearch
+    restart: always
+    logging:
+      driver: syslog
+      options:
+        tag: elasticsearch
+
 volumes:
   data01:
     driver: local
