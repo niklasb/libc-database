@@ -249,7 +249,7 @@ function App() {
 
   return (
     <div className="App">
-      <p>Powered by <Link href="https://github.com/niklasb/libc-database">libc-database</Link></p>
+      <p>Powered by the <Link href="https://github.com/niklasb/libc-database/tree/master/searchengine">libc-database search API</Link></p>
 
       <Grid container spacing={2}>
         <Grid item xs={6} sm={6}>
