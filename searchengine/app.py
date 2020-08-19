@@ -22,7 +22,7 @@ def get_symbols(id):
     return syms
 
 
-def find(body):
+def find(body, extra_symbols=[]):
     filters = []
 
     for h in ('id', 'md5', 'sha1', 'sha256', 'buildid'):
@@ -52,13 +52,16 @@ def find(body):
     for hit in res['hits']['hits']:
         doc = hit['_source']
         id = doc['id']
+        syms = get_symbols(id)
 
         result_symbols = {}
-        syms = get_symbols(id)
+
+        names = list(config.DEFAULT_SYMBOLS) + extra_symbols
         if symbol_filters:
-            for s in symbol_filters.keys():
-                if s in syms:
-                    result_symbols[s] = f'{syms[s]:#x}'
+            names += symbol_filters.keys()
+        for name in names:
+            if name in syms:
+                result_symbols[name] = f'{syms[name]:#x}'
 
         libcs.append({
             'id': id,
@@ -67,10 +70,21 @@ def find(body):
             'md5': doc.get('md5'),
             'sha256': doc.get('sha256'),
             'symbols': result_symbols,
-            'download_url': 'http://foo.bar',
+            'download_url': config.DOWNLOAD_URL.format(id),
         })
     return libcs
 
+
+def dump(id, body):
+    res = find({'id': id}, extra_symbols=body['symbols'])
+    if not res:
+        return connexion.problem(
+            status=404,
+            title='Not found',
+            detail=f'Unknown ID: {id}'
+        )
+
+    return res[0]
 
 
 app = connexion.App(__name__, specification_dir='.')

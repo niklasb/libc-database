@@ -7,10 +7,10 @@ paths:
   /find:
     post:
       operationId: app.find
-      description: |-
-        Look up libc by various attributes
       tags:
       - libcsearch
+      description: |-
+        Look up libc by various attributes
       requestBody:
         content:
           application/json:
@@ -25,6 +25,33 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Libc'
+          description: ''
+
+  /libc/{id}:
+    post:
+      operationId: app.dump
+      tags:
+      - libcsearch
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      description: |-
+        Dump libc symbols
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DumpRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Libc'
           description: ''
 
 components:
@@ -51,6 +78,14 @@ components:
           type: string
           format: url
           readOnly: true
+
+    DumpRequest:
+      type: object
+      properties:
+        symbols:
+          type: array
+          items:
+            type: string
 
 
 servers:
