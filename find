@@ -28,5 +28,5 @@ function find() {
 }
 
 for id in `find "$@"`; do
-  echo "`cat db/${id}.info` (id $id)"
+  echo "`cat db/${id}.info` ($id)"
 done

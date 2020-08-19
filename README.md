@@ -15,16 +15,16 @@ addresses. Only the last 12 bits are checked, because randomization usually
 works on page size level.
 
     $ ./find printf 260 puts f30
-    archive-glibc (id libc6_2.19-10ubuntu2_i386)
+    archive-glibc (libc6_2.19-10ubuntu2_i386)
 
 Find a libc from the leaked return address into `__libc_start_main`.
 
     $ ./find __libc_start_main_ret a83
-    ubuntu-trusty-i386-libc6 (id libc6_2.19-0ubuntu6.6_i386)
-    archive-eglibc (id libc6_2.19-0ubuntu6_i386)
-    ubuntu-utopic-i386-libc6 (id libc6_2.19-10ubuntu2.3_i386)
-    archive-glibc (id libc6_2.19-10ubuntu2_i386)
-    archive-glibc (id libc6_2.19-15ubuntu2_i386)
+    ubuntu-trusty-i386-libc6 (libc6_2.19-0ubuntu6.6_i386)
+    archive-eglibc (libc6_2.19-0ubuntu6_i386)
+    ubuntu-utopic-i386-libc6 (libc6_2.19-10ubuntu2.3_i386)
+    archive-glibc (libc6_2.19-10ubuntu2_i386)
+    archive-glibc (libc6_2.19-15ubuntu2_i386)
 
 Dump some useful offsets, given a libc ID. You can also provide your own names
 to dump.
@@ -39,19 +39,19 @@ to dump.
 Check whether a library is already in the database.
 
     $ ./identify /usr/lib/libc.so.6
-    id local-f706181f06104ef6c7008c066290ea47aa4a82c5
+    local-f706181f06104ef6c7008c066290ea47aa4a82c5
 
 Or find a libc using a hash (currently BuildID, MD5, SHA1 and SHA256 is
-implemented)
+implemented):
 
     $ ./identify bid=ebeabf5f7039f53748e996fc976b4da2d486a626
-    id libc6_2.17-93ubuntu4_i386
+    libc6_2.17-93ubuntu4_i386
     $ ./identify md5=af7c40da33c685d67cdb166bd6ab7ac0
-    id libc6_2.17-93ubuntu4_i386
+    libc6_2.17-93ubuntu4_i386
     $ ./identify sha1=9054f5cb7969056b6816b1e2572f2506370940c4
-    id libc6_2.17-93ubuntu4_i386
+    libc6_2.17-93ubuntu4_i386
     $ ./identify sha256=8dc102c06c50512d1e5142ce93a6faf4ec8b6f5d9e33d2e1b45311aef683d9b2
-    id libc6_2.17-93ubuntu4_i386
+    libc6_2.17-93ubuntu4_i386
 
 Download the whole libs corresponding to a libc ID.
 
