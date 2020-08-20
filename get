@@ -10,28 +10,35 @@ categories[cntr_category]="ubuntu"
 requirements["ubuntu"]="requirements_debian"
 cntr_category=$((cntr_category + 1))
 ubuntu() {
-  get_all_debian ubuntu-eglibc http://archive.ubuntu.com/ubuntu/pool/main/e/eglibc/
-  get_all_debian ubuntu-glibc http://archive.ubuntu.com/ubuntu/pool/main/g/glibc/
-  get_all_debian ubuntu-security-eglibc http://security.ubuntu.com/ubuntu/pool/main/e/eglibc/
-  get_all_debian ubuntu-security-glibc http://security.ubuntu.com/ubuntu/pool/main/g/glibc/
-  get_all_debian ubuntu-old-eglibc http://old-releases.ubuntu.com/ubuntu/pool/main/e/eglibc/
-  get_all_debian ubuntu-old-glibc http://old-releases.ubuntu.com/ubuntu/pool/main/g/glibc/
+  get_all_debian ubuntu-eglibc http://archive.ubuntu.com/ubuntu/pool/main/e/eglibc/ libc6
+  get_all_debian ubuntu-glibc http://archive.ubuntu.com/ubuntu/pool/main/g/glibc/ libc6
+  get_all_debian ubuntu-musl http://archive.ubuntu.com/ubuntu/pool/universe/m/musl/ musl
+  get_all_debian ubuntu-security-eglibc http://security.ubuntu.com/ubuntu/pool/main/e/eglibc/ libc6
+  get_all_debian ubuntu-security-glibc http://security.ubuntu.com/ubuntu/pool/main/g/glibc/ libc6
+  get_all_debian ubuntu-security-musl http://security.ubuntu.com/ubuntu/pool/universe/m/musl/ musl
+  get_all_debian ubuntu-old-eglibc http://old-releases.ubuntu.com/ubuntu/pool/main/e/eglibc/ libc6
+  get_all_debian ubuntu-old-glibc http://old-releases.ubuntu.com/ubuntu/pool/main/g/glibc/ libc6
+  get_all_debian ubuntu-old-musl http://old-releases.ubuntu.com/ubuntu/pool/universe/m/musl/ musl
 }
 
 categories[cntr_category]="debian"
 requirements["debian"]="requirements_debian"
 cntr_category=$((cntr_category + 1))
 debian() {
-  get_all_debian debian-glibc https://deb.debian.org/debian/pool/main/g/glibc
+  get_all_debian debian-glibc https://deb.debian.org/debian/pool/main/g/glibc/ libc6
+  get_all_debian debian-musl https://deb.debian.org/debian/pool/main/m/musl/ musl
 }
 
 categories[cntr_category]="rpm"
 requirements["rpm"]="requirements_rpm"
 cntr_category=$((cntr_category + 1))
 rpm() {
-  get_all_rpm rpm glibc x86_64
-  get_all_rpm rpm glibc i586
-  get_all_rpm rpm glibc i686
+  get_all_rpm rpm glibc libc x86_64
+  get_all_rpm rpm glibc libc i586
+  get_all_rpm rpm glibc libc i686
+  get_all_rpm rpm musl musl x86_64
+  get_all_rpm rpm musl musl i586
+  get_all_rpm rpm musl musl i686
 }
 
 categories[cntr_category]="centos"
@@ -46,21 +53,24 @@ categories[cntr_category]="arch"
 requirements["arch"]="requirements_pkg"
 cntr_category=$((cntr_category + 1))
 arch() {
-  get_all_pkg arch-glibc https://archive.archlinux.org/packages/g/glibc/
-  get_all_pkg arch-lib32-glibc https://archive.archlinux.org/packages/l/lib32-glibc/
+  get_all_pkg arch-glibc https://archive.archlinux.org/packages/g/glibc/ libc
+  get_all_pkg arch-lib32-glibc https://archive.archlinux.org/packages/l/lib32-glibc/ libc
+  get_all_pkg arch-musl https://archive.archlinux.org/packages/m/musl/ musl
 }
 
 categories[cntr_category]="kali"
 requirements["kali"]="requirements_debian"
 cntr_category=$((cntr_category + 1))
 kali() {
-  get_all_debian kali-glibc https://http.kali.org/pool/main/g/glibc/
+  get_all_debian kali-glibc https://http.kali.org/pool/main/g/glibc/ libc6
+  get_all_debian kali-musl https://http.kali.org/pool/main/m/musl/ musl
 }
 categories[cntr_category]="parrotsec"
 requirements["parrotsec"]="requirements_debian"
 cntr_category=$((cntr_category + 1))
 parrotsec() {
-  get_all_debian parrotsec-glibc https://download.parrot.sh/parrot/pool/main/g/glibc/
+  get_all_debian parrotsec-glibc https://download.parrot.sh/parrot/pool/main/g/glibc/ libc6
+  get_all_debian parrotsec-musl https://download.parrot.sh/parrot/pool/main/m/musl/ musl
 }
 
 
