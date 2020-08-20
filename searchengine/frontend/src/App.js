@@ -252,12 +252,12 @@ function App() {
       <p>Powered by the <Link href="https://github.com/niklasb/libc-database/tree/master/searchengine">libc-database search API</Link></p>
 
       <Grid container spacing={2}>
-        <Grid item xs={6} sm={6}>
-          <h2>Search</h2>
+        <Grid item sm={12} md={6}>
+          <h3>Search</h3>
           <SearchForm onSearch={onSearch} />
         </Grid>
-        <Grid item xs={6} sm={6}>
-          <h2>Results</h2>
+        <Grid item sm={12} md={6}>
+          <h3>Results</h3>
           {loading && <CircularProgress />}
           {results !== null && results.map(x => <Result {...x} />)}
         </Grid>
