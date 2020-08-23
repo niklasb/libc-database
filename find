@@ -15,7 +15,7 @@ function find_single() {
 }
 
 function find() {
-  [[ $# < 2 ]] && usage
+  [[ $# -lt 2 ]] && usage
   name=$1; shift
   address=$1; shift
   if [[ $# == 0 ]]; then
