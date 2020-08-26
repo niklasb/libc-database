@@ -10,7 +10,6 @@ import config
 
 es = Elasticsearch(hosts=[config.ES_HOST])
 log = logging.getLogger('wsgi')
-hashtypes = ['md5', 'sha1', 'sha256', 'buildid']
 
 log.info(f'Using elasticsearch server {config.ES_HOST}, index {config.ES_INDEX_NAME}')
 
@@ -31,7 +30,7 @@ def get_symbols(id):
 def find(body, extra_symbols=[]):
     filters = []
 
-    for h in hashtypes + ['id']:
+    for h in ('id', 'md5', 'sha1', 'sha256', 'buildid'):
         if h in body:
             filters.append({'match': {h: body[h]}})
 
@@ -91,29 +90,6 @@ def dump(id, body):
         )
 
     return res[0]
-
-
-def hashes(hashtype, hash):
-    """
-    Will return an URL to download the wanted binary
-    """
-    hashtype = hashtype.lower()
-    hash = hash.lower()
-    if hashtype not in hashtypes:
-        return connexion.problem(
-            status=404,
-            title='Not found',
-            detail=f'Unknown hashtype: {hashtype}'
-        )
-    res = find({hashtype: hash})
-    if not res:
-        return connexion.problem(
-            status=404,
-            title='Not found',
-            detail=f'Unknown hash: {hash}'
-        )
-
-    return res[0]['download_url']
 
 
 app = connexion.App(__name__, specification_dir='.')
