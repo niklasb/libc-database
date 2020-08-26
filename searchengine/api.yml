@@ -54,6 +54,39 @@ paths:
                 $ref: '#/components/schemas/Libc'
           description: ''
 
+  /hashes/{hashtype}/{hash}:
+    get:
+      operationId: app.hashes
+      tags:
+        - libcsearch
+      parameters:
+        - in: path
+          name: hashtype
+          schema:
+            type: string
+          required: true
+        - in: path
+          name: hash
+          schema:
+            type: string
+          required: true
+      description: >-
+        Get the download link using a hash. Implemented for pwntools
+        compatibility.
+      responses:
+        '200':
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                Link to the libc binary file:
+                  value: 'https://link/to/binary.so'
+                Library not found:
+                  value: ''
+          description: Link to the libc binary file
+
+
 components:
   schemas:
     Libc:
