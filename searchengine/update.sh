@@ -1,7 +1,7 @@
 #!/bin/bash
 cd "$(dirname "$0")"
 cd ..
-./get
+./get all
 cd searchengine
 source $HOME/.local/bin/virtualenvwrapper.sh
 workon libcsearch
