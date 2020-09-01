@@ -75,7 +75,7 @@ index_libc() {
 check_id() {
   local id=$1
   if [[ -e db/${id}.info ]]; then
-    echo "  -> Already have this version, 'rm db/${id}.*' to force"
+    echo "  -> Already have this version, 'rm ${PWD}/db/${id}.*' to force"
     return 1
   fi
   return 0
@@ -119,6 +119,7 @@ get_all_debian() {
   for f in `wget $url/ -O - 2>/dev/null | grep -Eoh 'libc6(-i386|-amd64)?_[^"]*(amd64|i386)\.deb' |grep -v "</a>"`; do
     get_debian $url/$f $1
   done
+  return 0
 }
 
 requirements_debian() {

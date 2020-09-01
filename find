@@ -27,6 +27,9 @@ function find() {
   fi
 }
 
+ret=1
 for id in `find "$@"`; do
   echo "`cat db/${id}.info` ($id)"
+  ret=0
 done
+exit $ret

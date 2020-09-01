@@ -1,5 +1,6 @@
 #!/bin/bash
 cd "$(dirname "$0")"
+. common/libc.sh
 if [[ $# < 1 ]]; then
   echo >&2 "Usage: $0 id [name1 [name2 ...]]"
   exit 2
@@ -11,7 +12,9 @@ if [[ $# == 0 ]]; then
 else
   names="$@"
 fi
+ls -1 "db/${id}."* >/dev/null 2>&1 || die "Invalid ID '$id'"
 for name in $names; do
   offset=`cat db/${id}.symbols | grep "^$name " | cut -d' ' -f2`
+  [ -z "$offset" ] && die "Invalid symbol '$name'"
   echo "offset_${name} = 0x${offset}"
 done
