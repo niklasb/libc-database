@@ -16,8 +16,13 @@ fi
 
 arg="$1"
 
-if [[ -f "$arg" ]]; then
-  libc=$arg
+if [ "${1:0:1}" != "/" ]; then    # this is a relative path
+  libc="$OLDPWD"/"$arg"
+else
+  libc="$arg"
+fi
+
+if [[ -f "$libc" ]]; then
   arg="sha1=$(sha1sum "$libc" | awk '{print $1}')"
 fi
 
