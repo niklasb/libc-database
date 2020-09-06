@@ -1,6 +1,5 @@
 #!/bin/bash
 set -o pipefail
-cd "$(dirname "$0")"
 help() {
   echo >&2 "Usage: $0 path/to/libc.so"
   echo >&2 "    OR $0 bid=<BUILD_ID>"
@@ -16,8 +15,13 @@ fi
 
 arg="$1"
 
-if [[ -f "$arg" ]]; then
-  libc=$arg
+if [ -f "$arg" ]; then
+  libc="$(readlink -f "$arg")"
+fi
+
+cd "$(dirname "$0")"
+
+if [[ -f "$libc" ]]; then
   arg="sha1=$(sha1sum "$libc" | awk '{print $1}')"
 fi
 
