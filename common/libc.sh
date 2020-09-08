@@ -8,7 +8,7 @@ die() {
 }
 
 dump_symbols() {
-  readelf -Ws $1 | perl -n -e '/: (\w*)[\s]*[\w]*[\s]*(FUNC|OBJECT)[\s]*[\w]*[\s]*[\w]*[\s]*[\w]*[\s]*(\w*)/ && print "$3 $1\n"'
+  readelf -Ws $1 | perl -n -e '/: (\w+)\s+\w+\s+(?:FUNC|OBJECT)\s+(?:\w+\s+){3}(\w+)\b(?:@@GLIBC)?/ && print "$2 $1\n"' | sort -u
 }
 
 extract_label() {
