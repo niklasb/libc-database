@@ -1,12 +1,13 @@
 #!/bin/bash
-cd "$(dirname "$0")"
 if [[ $# != 1 ]]; then
   echo >&2 "Usage: $0 libc_filename"
   exit 2
 fi
+libc="$(readlink -f "$1")"
+cd "$(dirname "$0")"
 
 . common/libc.sh
 
 requirements_general || die "General requirements are not met. Please, refer to README.md for installation instructions"
 requirements_local || die "Requirements for index a local libc are not met. Please, refer to README.md for installation instructions"
-add_local $1
+add_local "$libc"
