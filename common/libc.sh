@@ -292,7 +292,7 @@ requirements_pkg() {
 
 add_local() {
   local libc=$1
-  [[ -e $libc ]] || return
+  [[ -f $libc ]] || return
   local info="local"
   local id="local-`sha1sum $libc`"
   echo "Adding local libc $libc (id $id)"
