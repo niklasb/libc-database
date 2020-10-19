@@ -78,6 +78,10 @@ components:
           type: string
           format: url
           readOnly: true
+        symbols_url:
+          type: string
+          format: url
+          readOnly: true
 
     DumpRequest:
       type: object

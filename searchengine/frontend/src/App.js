@@ -188,7 +188,7 @@ function SearchForm({ onSearch = () => {} }) {
   );
 }
 
-function Result({ id, buildid, md5, symbols, download_url }) {
+function Result({ id, buildid, md5, symbols, download_url, symbols_url }) {
   const classes = useStyles();
   const [open, setOpen] = useState(false);
 
@@ -214,6 +214,12 @@ function Result({ id, buildid, md5, symbols, download_url }) {
               <TableCell>Download</TableCell>
               <TableCell>
                 <Link href={download_url} download>Click to download</Link>
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>All Symbols</TableCell>
+              <TableCell>
+                <Link href={symbols_url} download>Click to download</Link>
               </TableCell>
             </TableRow>
             <TableRow>

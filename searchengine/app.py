@@ -76,6 +76,7 @@ def find(body, extra_symbols=[]):
             'sha256': doc.get('sha256'),
             'symbols': result_symbols,
             'download_url': config.DOWNLOAD_URL.format(id),
+            'symbols_url': config.ALL_SYMBOLS_URL.format(id),
         })
     return libcs
 
