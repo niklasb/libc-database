@@ -19,3 +19,4 @@ DEFAULT_SYMBOLS = [
     'printf',
 ]
 DOWNLOAD_URL = 'https://libc.rip/download/{}.so'
+ALL_SYMBOLS_URL = 'https://libc.rip/download/{}.symbols'
