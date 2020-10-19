@@ -8,7 +8,7 @@ die() {
 }
 
 dump_symbols() {
-  readelf -Ws $1 | perl -n -e '/: (\w*).*?(\w+)@@GLIBC_/ && print "$2 $1\n"'
+  readelf -Ws $1 | perl -n -e '/: (\w+)\s+\w+\s+(?:FUNC|OBJECT)\s+(?:\w+\s+){3}(\w+)\b(?:@@GLIBC)?/ && print "$2 $1\n"' | sort -u
 }
 
 extract_label() {
@@ -96,10 +96,11 @@ requirements_general() {
 get_debian() {
   local url="$1"
   local info="$2"
+  local pkgname="$3"
   local tmp=`mktemp -d`
   echo "Getting $info"
   echo "  -> Location: $url"
-  local id=`echo $url | perl -n -e '/(libc6[^\/]*)\./ && print $1'`
+  local id=`echo $url | perl -n -e '/('"$pkgname"'[^\/]*)\./ && print $1'`
   echo "  -> ID: $id"
   check_id $id || return
   echo "  -> Downloading package"
@@ -116,8 +117,9 @@ get_debian() {
 get_all_debian() {
   local info=$1
   local url=$2
-  for f in `wget $url/ -O - 2>/dev/null | grep -Eoh 'libc6(-i386|-amd64)?_[^"]*(amd64|i386)\.deb' |grep -v "</a>"`; do
-    get_debian $url/$f $1
+  local pkgname=$3
+  for f in `wget $url/ -O - 2>/dev/null | grep -Eoh "$pkgname"'(-i386|-amd64|-x32)?_[^"]*(amd64|i386)\.deb' |grep -v "</a>"`; do
+    get_debian "$url/$f" "$info" "$pkgname"
   done
   return 0
 }
@@ -137,10 +139,11 @@ requirements_debian() {
 get_rpm() {
   local url="$1"
   local info="$2"
+  local pkgname="$3"
   local tmp="$(mktemp -d)"
   echo "Getting $info"
   echo "  -> Location: $url"
-  local id=$(echo "$url" | perl -n -e '/(libc[^\/]*)\./ && print $1')
+  local id=$(echo "$url" | perl -n -e '/('"$pkgname"'[^\/]*)\./ && print $1')
   echo "  -> ID: $id"
   check_id "$id" || return
   echo "  -> Downloading package"
@@ -157,14 +160,15 @@ get_rpm() {
 get_all_rpm() {
   local info=$1
   local pkg=$2
-  local arch=$3
+  local pkgname=$3
+  local arch=$4
   local website="http://rpmfind.net"
   local searchurl="$website/linux/rpm2html/search.php?query=$pkg"
   echo "Getting package $pkg locations"
   local url=""
   for i in $(seq 1 3); do
     urls=$(wget "$searchurl" -O - 2>/dev/null \
-      | grep -oh "/[^']*libc[^']*\.$arch\.rpm")
+      | grep -oh "/[^']*${pkgname}[^']*\.$arch\.rpm")
     [[ -z "$urls" ]] || break
     echo "Retrying..."
     sleep 1
@@ -172,7 +176,7 @@ get_all_rpm() {
   [[ -n "$urls" ]] || die "Failed to get package version"
   for url in $urls
   do
-    get_rpm "$website$url" "$info"
+    get_rpm "$website$url" "$info" "$pkgname"
     sleep .1
   done
 }
@@ -208,7 +212,7 @@ get_from_filelistgz() {
   [[ -n "$urls" ]] || die "Failed to get package version"
   for url in $urls
   do
-    get_rpm "$website/$url" "$info"
+    get_rpm "$website/$url" "$info" "$pkg"
     sleep .1
   done
 }
@@ -227,10 +231,11 @@ requirements_centos() {
 get_pkg() {
   local url="$1"
   local info="$2"
+  local pkgname="$3"
   local tmp="$(mktemp -d)"
   echo "Getting $info"
   echo "  -> Location: $url"
-  local id=$(echo "$url" | perl -n -e '/(libc[^\/]*)\.pkg\.tar\.(xz|zst)/ && print $1' | ( (echo "$url" | grep -q 'lib32') && sed 's/x86_64/x86/g' || cat))
+  local id=$(echo "$url" | perl -n -e '/('"$pkgname"'[^\/]*)\.pkg\.tar\.(xz|zst)/ && print $1' | ( (echo "$url" | grep -q 'lib32') && sed 's/x86_64/x86/g' || cat))
   echo "  -> ID: $id"
   check_id $id || return
   echo "  -> Downloading package"
@@ -256,11 +261,12 @@ get_pkg() {
 get_all_pkg() {
   local info=$1
   local directory=$2
+  local pkgname=$3
   echo "Getting package $info locations"
   local url=""
   for i in $(seq 1 3); do
     urls=$(wget "$directory" -O - 2>/dev/null \
-      | grep -oh '[^"]*libc[^"]*\.pkg[^"]*' \
+      | grep -oh '[^"]*'"$pkgname"'[^"]*\.pkg[^"]*' \
       | grep -v '.sig' \
       | grep -v '>')
     [[ -z "$urls" ]] || break
@@ -270,7 +276,7 @@ get_all_pkg() {
   [[ -n "$urls" ]] || die "Failed to get package version"
   for url in $urls
   do
-    get_pkg "$directory/$url" "$info"
+    get_pkg "$directory/$url" "$info" "$pkgname"
     sleep .1
   done
 }
@@ -287,6 +293,67 @@ requirements_pkg() {
   which xz     1>/dev/null 2>&1 || return
   return 0
 }
+
+
+# ===== Alpine ===== #
+
+get_apk() {
+  local url="$1"
+  local info="$2"229
+  local pkgname="$3"
+  local tmp=$(mktemp -d)
+  echo "Getting $info"
+  echo "  -> Location: $url"
+  local id=$(echo "$url" | perl -n -e '/('"$pkgname"'[^\/]*)\.apk/ && print $1')
+  echo "  -> ID: $id"
+  check_id $id || return
+  echo "  -> Downloading package"
+  wget "$url" 2>/dev/null -O "$tmp/pkg.tar.gz" || die "Failed to download package from $url"
+  echo "  -> Extracting package"
+  pushd $tmp 1>/dev/null
+  tar xzf pkg.tar.gz --warning=none
+  popd 1>/dev/null
+  index_libc "$tmp" "$id" "$info" "$url"
+  rm -rf $tmp
+}
+
+get_all_apk() {
+  local info=$1
+  local repo=$2
+  local version=$3
+  local component=$4
+  local arch=$5
+  local pkgname=$6
+  local directory="$repo/$version/$component/$arch/"
+  echo "Getting package $info locations"
+  local url=""
+  for i in $(seq 1 3); do
+    urls=$(wget "$directory" -O - 2>/dev/null \
+      | grep -oh '[^"]*'"$pkgname"'-[0-9][^"]*\.apk' \
+      | grep -v '.sig' \
+      | grep -v '>')
+    [[ -z "$urls" ]] || break
+    echo "Retrying..."
+    sleep 1
+  done
+  [[ -n "$urls" ]] || die "Failed to get package version"
+  for url in $urls
+  do
+    get_apk "$directory$url" "$info" "$pkgname"
+    sleep .1
+  done
+}
+
+requirements_apk() {
+  which mktemp 1>/dev/null 2>&1 || return
+  which perl   1>/dev/null 2>&1 || return
+  which wget   1>/dev/null 2>&1 || return
+  which tar    1>/dev/null 2>&1 || return
+  which gzip    1>/dev/null 2>&1 || return
+  which grep   1>/dev/null 2>&1 || return
+  return 0
+}
+
 
 # ===== Local ===== #
 
