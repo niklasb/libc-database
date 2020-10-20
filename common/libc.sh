@@ -97,6 +97,7 @@ get_debian() {
   local url="$1"
   local info="$2"
   local pkgname="$3"
+  local ignore_download_fail="$4"
   local tmp=`mktemp -d`
   echo "Getting $info"
   echo "  -> Location: $url"
@@ -104,7 +105,16 @@ get_debian() {
   echo "  -> ID: $id"
   check_id $id || return
   echo "  -> Downloading package"
-  wget "$url" 2>/dev/null -O $tmp/pkg.deb || die "Failed to download package from $url"
+  wget "$url" 2>/dev/null -O $tmp/pkg.deb
+  if [ $? -ne 0 ]; then
+    echo >&2 "Failed to download package from $url"
+    if [ "$ignore_download_fail" = "ignore" ]; then
+      echo "Ignoring..."
+      return
+    else
+      exit 1
+    fi
+  fi
   echo "  -> Extracting package"
   pushd $tmp 1>/dev/null
   ar x pkg.deb || die "ar failed"
@@ -354,6 +364,34 @@ requirements_apk() {
   return 0
 }
 
+# ===== Launchpad =====
+
+get_all_launchpad() {
+  local info="$1"
+  local distro="$2"
+  local pkgname="$3"
+  local arch="$4"
+
+  local series=""
+  for series in $(wget "https://api.launchpad.net/1.0/$distro/series" -O - 2>/dev/null | jq '.entries[] | .name'); do
+    series=$(echo $series | grep -Eo '[^"]+')
+    echo "Launchpad: Series $series"
+    local apiurl="https://api.launchpad.net/1.0/$distro/+archive/primary?ws.op=getPublishedBinaries&binary_name=$pkgname&exact_match=true&distro_arch_series=https://api.launchpad.net/1.0/$distro/$series/$arch"
+    local url=""
+    urls=$(wget "$apiurl" -O - 2>/dev/null | jq '[ .entries[] | .build_link + "/+files/" + .binary_package_name + "_" + .source_package_version + "_" + (.distro_arch_series_link | split("/") | .[-1]) + ".deb" | ltrimstr("https://api.launchpad.net/1.0/") | "https://launchpad.net/" + . ] | unique | .[]')
+    for url in $urls; do
+      url=$(echo $url | grep -Eo '[^"]+')
+      # some old packages are deleted. ignore those.
+      get_debian "$url" "$info-$series" "$pkgname" ignore
+    done
+  done
+}
+
+requirements_launchpad() {
+  which jq       1>/dev/null 2>&1 || return
+  requirements_debian || return
+  return 0
+}
 
 # ===== Local ===== #
 

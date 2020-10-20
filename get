@@ -104,7 +104,13 @@ parrotsec() {
   get_all_debian parrotsec-glibc https://download.parrot.sh/parrot/pool/main/g/glibc/ libc6
   get_all_debian parrotsec-musl https://download.parrot.sh/parrot/pool/main/m/musl/ musl
 }
-
+categories[cntr_category]="launchpad"
+requirements["launchpad"]="requirements_launchpad"
+cntr_category=$((cntr_category + 1))
+launchpad() {
+  get_all_launchpad launchpad-ubuntu-glibc ubuntu libc6 amd64
+  get_all_launchpad launchpad-ubuntu-glibc ubuntu libc6 i386
+}
 
 help() {
   exec 1>&2

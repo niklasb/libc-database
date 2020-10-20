@@ -116,7 +116,7 @@ To run these scripts, you will need following command on your PATH:
 
 ### CentOS-based
 
-In addition of RPM-Based requirements, you will need:
+In addition to the RPM-Based requirements, you will need:
 
 * wget
 * gzip
@@ -146,6 +146,13 @@ In addition of RPM-Based requirements, you will need:
 * grep
 
 
+### Launchpad-based
+
+In addition to the Debian-based requirements, you will need:
+
+* jq
+
+
 ### Install everything
 
 To install everything on Debian 10, run these commands:
@@ -156,7 +163,7 @@ apt-get install -y \
   binutils file \
   wget \
   rpm2cpio cpio \
-  zstd
+  zstd jq
 ```
 
 
