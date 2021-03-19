@@ -104,7 +104,11 @@ get_debian() {
   echo "  -> ID: $id"
   check_id $id || return
   echo "  -> Downloading package"
-  wget "$url" 2>/dev/null -O $tmp/pkg.deb || die "Failed to download package from $url"
+  if !(wget "$url" 2>/dev/null -O $tmp/pkg.deb)
+  then
+    echo "Failed to download package from $url" >&2
+    return
+  fi
   echo "  -> Extracting package"
   pushd $tmp 1>/dev/null
   ar x pkg.deb || die "ar failed"
@@ -147,7 +151,11 @@ get_rpm() {
   echo "  -> ID: $id"
   check_id "$id" || return
   echo "  -> Downloading package"
-  wget "$url" 2>/dev/null -O "$tmp/pkg.rpm" || die "Failed to download package from $url"
+  if !(wget "$url" 2>/dev/null -O "$tmp/pkg.rpm")
+  then
+    echo "Failed to download package from $url" >&2
+    return
+  fi
   echo "  -> Extracting package"
   pushd "$tmp" 1>/dev/null
   (rpm2cpio pkg.rpm || die "rpm2cpio failed") | \
@@ -239,7 +247,11 @@ get_pkg() {
   echo "  -> ID: $id"
   check_id $id || return
   echo "  -> Downloading package"
-  wget "$url" 2>/dev/null -O "$tmp/pkg" || die "Failed to download package from $url"
+  if !(wget "$url" 2>/dev/null -O "$tmp/pkg")
+  then
+    echo "Failed to download package from $url" >&2
+    return
+  fi
   echo "  -> Extracting package"
   pushd "$tmp" 1>/dev/null
   if (echo "$url" | grep -q '\.zst')
@@ -308,7 +320,11 @@ get_apk() {
   echo "  -> ID: $id"
   check_id $id || return
   echo "  -> Downloading package"
-  wget "$url" 2>/dev/null -O "$tmp/pkg.tar.gz" || die "Failed to download package from $url"
+  if !(wget "$url" 2>/dev/null -O "$tmp/pkg.tar.gz")
+  then
+    echo "Failed to download package from $url" >&2
+    return
+  fi
   echo "  -> Extracting package"
   pushd $tmp 1>/dev/null
   tar xzf pkg.tar.gz --warning=none
