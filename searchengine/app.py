@@ -27,6 +27,12 @@ def get_symbols(id):
     return syms
 
 
+@lru_cache(maxsize=2000)
+def get_libs_url(id):
+    with open(f'{config.DB_DIR}/{id}.url') as f:
+        return f.read().strip()
+
+
 def find(body, extra_symbols=[]):
     filters = []
 
@@ -77,6 +83,7 @@ def find(body, extra_symbols=[]):
             'symbols': result_symbols,
             'download_url': config.DOWNLOAD_URL.format(id),
             'symbols_url': config.ALL_SYMBOLS_URL.format(id),
+            'libs_url': get_libs_url(id),
         })
     return libcs
 
