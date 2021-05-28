@@ -104,7 +104,10 @@ get_debian() {
   echo "  -> ID: $id"
   check_id $id || return
   echo "  -> Downloading package"
-  wget "$url" 2>/dev/null -O $tmp/pkg.deb || die "Failed to download package from $url"
+  if ! wget "$url" 2>/dev/null -O $tmp/pkg.deb; then
+    echo >&2 "Failed to download package from $url"
+    return
+  fi
   echo "  -> Extracting package"
   pushd $tmp 1>/dev/null
   ar x pkg.deb || die "ar failed"
@@ -147,7 +150,10 @@ get_rpm() {
   echo "  -> ID: $id"
   check_id "$id" || return
   echo "  -> Downloading package"
-  wget "$url" 2>/dev/null -O "$tmp/pkg.rpm" || die "Failed to download package from $url"
+  if ! wget "$url" 2>/dev/null -O "$tmp/pkg.rpm"; then
+    echo >&2 "Failed to download package from $url"
+    return
+  fi
   echo "  -> Extracting package"
   pushd "$tmp" 1>/dev/null
   (rpm2cpio pkg.rpm || die "rpm2cpio failed") | \
@@ -164,7 +170,7 @@ get_all_rpm() {
   local arch=$4
   local website="http://rpmfind.net"
   local searchurl="$website/linux/rpm2html/search.php?query=$pkg"
-  echo "Getting package $pkg locations"
+  echo "Getting RPM package location: $info $pkg $pkgname $arch"
   local url=""
   for i in $(seq 1 3); do
     urls=$(wget "$searchurl" -O - 2>/dev/null \
@@ -173,7 +179,12 @@ get_all_rpm() {
     echo "Retrying..."
     sleep 1
   done
-  [[ -n "$urls" ]] || die "Failed to get package version"
+
+  if ! [[ -n "$urls" ]]; then
+    echo >&2 "Failed to get RPM package URL for $info $pkg $pkgname $arch"
+    return
+  fi
+
   for url in $urls
   do
     get_rpm "$website$url" "$info" "$pkgname"
@@ -239,7 +250,10 @@ get_pkg() {
   echo "  -> ID: $id"
   check_id $id || return
   echo "  -> Downloading package"
-  wget "$url" 2>/dev/null -O "$tmp/pkg" || die "Failed to download package from $url"
+  if ! wget "$url" 2>/dev/null -O "$tmp/pkg"; then
+    echo >&2 "Failed to download package from $url"
+    return
+  fi
   echo "  -> Extracting package"
   pushd "$tmp" 1>/dev/null
   if (echo "$url" | grep -q '\.zst')
@@ -308,7 +322,10 @@ get_apk() {
   echo "  -> ID: $id"
   check_id $id || return
   echo "  -> Downloading package"
-  wget "$url" 2>/dev/null -O "$tmp/pkg.tar.gz" || die "Failed to download package from $url"
+  if ! wget "$url" 2>/dev/null -O "$tmp/pkg.tar.gz"; then
+    echo >&2 "Failed to download package from $url"
+    return
+  fi
   echo "  -> Extracting package"
   pushd $tmp 1>/dev/null
   tar xzf pkg.tar.gz --warning=none
