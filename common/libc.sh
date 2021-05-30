@@ -371,6 +371,34 @@ requirements_apk() {
   return 0
 }
 
+# ===== Launchpad =====
+
+get_all_launchpad() {
+  local info="$1"
+  local distro="$2"
+  local pkgname="$3"
+  local arch="$4"
+
+  local series=""
+  for series in $(wget "https://api.launchpad.net/1.0/$distro/series" -O - 2>/dev/null | jq '.entries[] | .name'); do
+    series=$(echo $series | grep -Eo '[^"]+')
+    echo "Launchpad: Series $series"
+    local apiurl="https://api.launchpad.net/1.0/$distro/+archive/primary?ws.op=getPublishedBinaries&binary_name=$pkgname&exact_match=true&distro_arch_series=https://api.launchpad.net/1.0/$distro/$series/$arch"
+    local url=""
+    urls=$(wget "$apiurl" -O - 2>/dev/null | jq '[ .entries[] | .build_link + "/+files/" + .binary_package_name + "_" + .source_package_version + "_" + (.distro_arch_series_link | split("/") | .[-1]) + ".deb" | ltrimstr("https://api.launchpad.net/1.0/") | "https://launchpad.net/" + . ] | unique | .[]')
+    for url in $urls; do
+      url=$(echo $url | grep -Eo '[^"]+')
+      # some old packages are deleted. ignore those.
+      get_debian "$url" "$info-$series" "$pkgname"
+    done
+  done
+}
+
+requirements_launchpad() {
+  which jq       1>/dev/null 2>&1 || return
+  requirements_debian || return
+  return 0
+}
 
 # ===== Local ===== #
 
