@@ -123,6 +123,7 @@ get_all_debian() {
   local pkgname=$3
   for f in `wget $url/ -O - 2>/dev/null | grep -Eoh "$pkgname"'(-i386|-amd64|-x32)?_[^"]*(amd64|i386)\.deb' |grep -v "</a>"`; do
     get_debian "$url/$f" "$info" "$pkgname"
+    sleep .1
   done
   return 0
 }
@@ -390,6 +391,7 @@ get_all_launchpad() {
       url=$(echo $url | grep -Eo '[^"]+')
       # some old packages are deleted. ignore those.
       get_debian "$url" "$info-$series" "$pkgname"
+      sleep .1
     done
   done
 }
