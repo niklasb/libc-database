@@ -111,7 +111,12 @@ get_debian() {
   echo "  -> Extracting package"
   pushd $tmp 1>/dev/null
   ar x pkg.deb || die "ar failed"
-  tar xf data.tar.* || die "tar failed"
+  if [ -f data.tar.zst ]; then
+    zstd -d data.tar.zst || die "zstd failed"
+    tar xf data.tar || die "tar failed"
+  else
+    tar xf data.tar.* || die "tar failed"
+  fi
   popd 1>/dev/null
   index_libc "$tmp" "$id" "$info" "$url"
   rm -rf $tmp
@@ -134,6 +139,7 @@ requirements_debian() {
   which ar     1>/dev/null 2>&1 || return
   which tar    1>/dev/null 2>&1 || return
   which grep   1>/dev/null 2>&1 || return
+  which zstd   1>/dev/null 2>&1 || return
   return 0
 }
 
