@@ -156,7 +156,7 @@ get_rpm() {
   echo "  -> ID: $id"
   check_id "$id" || return
   echo "  -> Downloading package"
-  if ! wget "$url" 2>/dev/null -O "$tmp/pkg.rpm"; then
+  if ! wget --no-dns-cache --connect-timeout=30 "$url" 2>/dev/null -O "$tmp/pkg.rpm"; then
     echo >&2 "Failed to download package from $url"
     return
   fi
