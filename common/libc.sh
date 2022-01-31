@@ -22,6 +22,16 @@ dump_libc_start_main_ret() {
     | grep -EB 1 '<exit.*>' \
     | head -n 1 \
     | extract_label`
+  # Since glibc 2.34 it's __libc_start_main -> __libc_start_call_main -> main
+  # and __libc_start_call_main is right before __libc_start_main.
+  if [[ "$call_main" == "" ]]; then
+    local call_main=`objdump -D $1 \
+      | grep -EB 100 '<__libc_start_main.*>' \
+      | grep call \
+      | grep -EB 1 '<exit.*>' \
+      | head -n 1 \
+      | extract_label`
+  fi
   local offset=`objdump -D $1 | grep -EA 1 "(^| )$call_main:" | tail -n 1 | extract_label`
   if [[ "$offset" != "" ]]; then
     echo "__libc_start_main_ret $offset"
