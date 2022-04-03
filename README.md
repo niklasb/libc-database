@@ -102,6 +102,7 @@ To run these scripts, you will need following command on your PATH:
 * ar
 * tar
 * grep
+* zstd
 
 
 ### RPM-based (category 'rpm')

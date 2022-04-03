@@ -22,6 +22,16 @@ dump_libc_start_main_ret() {
     | grep -EB 1 '<exit.*>' \
     | head -n 1 \
     | extract_label`
+  # Since glibc 2.34 it's __libc_start_main -> __libc_start_call_main -> main
+  # and __libc_start_call_main is right before __libc_start_main.
+  if [[ "$call_main" == "" ]]; then
+    local call_main=`objdump -D $1 \
+      | grep -EB 100 '<__libc_start_main.*>' \
+      | grep call \
+      | grep -EB 1 '<exit.*>' \
+      | head -n 1 \
+      | extract_label`
+  fi
   local offset=`objdump -D $1 | grep -EA 1 "(^| )$call_main:" | tail -n 1 | extract_label`
   if [[ "$offset" != "" ]]; then
     echo "__libc_start_main_ret $offset"
@@ -111,7 +121,12 @@ get_debian() {
   echo "  -> Extracting package"
   pushd $tmp 1>/dev/null
   ar x pkg.deb || die "ar failed"
-  tar xf data.tar.* || die "tar failed"
+  if [ -f data.tar.zst ]; then
+    zstd -d data.tar.zst || die "zstd failed"
+    tar xf data.tar || die "tar failed"
+  else
+    tar xf data.tar.* || die "tar failed"
+  fi
   popd 1>/dev/null
   index_libc "$tmp" "$id" "$info" "$url"
   rm -rf $tmp
@@ -135,6 +150,7 @@ requirements_debian() {
   which ar     1>/dev/null 2>&1 || return
   which tar    1>/dev/null 2>&1 || return
   which grep   1>/dev/null 2>&1 || return
+  which zstd   1>/dev/null 2>&1 || return
   return 0
 }
 
@@ -151,7 +167,7 @@ get_rpm() {
   echo "  -> ID: $id"
   check_id "$id" || return
   echo "  -> Downloading package"
-  if ! wget "$url" 2>/dev/null -O "$tmp/pkg.rpm"; then
+  if ! wget --no-dns-cache --connect-timeout=30 "$url" 2>/dev/null -O "$tmp/pkg.rpm"; then
     echo >&2 "Failed to download package from $url"
     return
   fi
