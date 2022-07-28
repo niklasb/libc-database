@@ -17,7 +17,7 @@ extract_label() {
 
 dump_libc_start_main_ret() {
   local call_main=`objdump -D $1 \
-    | grep -EA 100 '<__libc_start_main.*>' \
+    | grep -EA 100 '<__libc_start_main.*>:' \
     | grep call \
     | grep -EB 1 '<exit.*>' \
     | head -n 1 \
@@ -26,7 +26,7 @@ dump_libc_start_main_ret() {
   # and __libc_start_call_main is right before __libc_start_main.
   if [[ "$call_main" == "" ]]; then
     local call_main=`objdump -D $1 \
-      | grep -EB 100 '<__libc_start_main.*>' \
+      | grep -EB 100 '<__libc_start_main.*>:' \
       | grep call \
       | grep -EB 1 '<exit.*>' \
       | head -n 1 \
