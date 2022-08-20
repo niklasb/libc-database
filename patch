@@ -17,6 +17,10 @@ targetelf=$(realpath $2)
 cd "$(dirname "$#")"
 . common/libc.sh
 
+if ! patch_requirements ; then
+  die "Patching requires both realpath and patchelf to work"
+fi
+
 ls -1 "db/${id}" >/dev/null 2>&1 || die "Invalid ID '$id'"
 
 interpreters=$(find "db/${id}" -name "ld[-_.][a-zA-Z0-9\.]*\.so*" | grep -v "debug")
