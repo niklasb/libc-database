@@ -12,9 +12,16 @@ if [[ $# == 0 ]]; then
 else
   names="$@"
 fi
-ls -1 "db/${id}."* >/dev/null 2>&1 || die "Invalid ID '$id'"
+
+ls -1 "db/${id}" >/dev/null 2>&1 || die "Invalid ID '$id'"
 for name in $names; do
-  offset=`cat db/${id}.symbols | grep "^$name " | cut -d' ' -f2`
-  [ -z "$offset" ] && die "Invalid symbol '$name'"
-  echo "offset_${name} = 0x${offset}"
+  found=0
+  ls db/${id}/*.symbols | while read file; do
+    offset=`cat $file | grep "^$name " | cut -d ' ' -f2`
+	[ -z "$offset" ] && continue
+	echo "offset_$name in " ${id::-7}.so = "0x${offset}"
+	found=1
+  done
+  [ -z $found ] && die "No symbol $name found in libraries."
 done
+

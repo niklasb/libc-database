@@ -49,16 +49,16 @@ categories[cntr_category]="centos"
 requirements["centos"]="requirements_centos"
 cntr_category=$((cntr_category + 1))
 centos() {
-  get_from_filelistgz centos-glibc http://mirror.centos.org/centos/ glibc i686
-  get_from_filelistgz centos-glibc http://mirror.centos.org/centos/ glibc x86_64
+  get_from_filelistgz centos-glibc http://mirror.centos.org/centos/ glibc i686 http://debuginfo.centos.org/ 
+  get_from_filelistgz centos-glibc http://mirror.centos.org/centos/ glibc x86_64 http://debuginfo.centos.org/ 
 }
 
 categories[cntr_category]="arch"
 requirements["arch"]="requirements_pkg"
 cntr_category=$((cntr_category + 1))
 arch() {
-  get_all_pkg arch-glibc https://archive.archlinux.org/packages/g/glibc/ libc
-  get_all_pkg arch-lib32-glibc https://archive.archlinux.org/packages/l/lib32-glibc/ libc
+  get_all_pkg arch-glibc https://archive.archlinux.org/packages/g/glibc/ libc glibc
+  get_all_pkg arch-lib32-glibc https://archive.archlinux.org/packages/l/lib32-glibc/ libc glibc
   get_all_pkg arch-musl https://archive.archlinux.org/packages/m/musl/ musl
 }
 
@@ -152,3 +152,4 @@ for category in "$@" ; do
   echo "Downloading/updating $category"
   $category
 done
+

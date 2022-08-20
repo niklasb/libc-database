@@ -46,18 +46,33 @@ dump_bin_sh() {
 }
 
 process_libc() {
-  local libc=$1
+  local lib=$1
   local id=$2
   local info=$3
   local url=$4
-  echo "  -> Writing libc ${libc} to db/${id}.so"
-  cp $libc db/${id}.so
-  echo "  -> Writing symbols to db/${id}.symbols"
-  (dump_symbols $libc; dump_libc_start_main_ret $libc; dump_bin_sh $libc) \
-     > db/${id}.symbols
+  local suffix=$5
+  echo "  -> Writing binary $lib to db/${id}/"
+  mkdir -p db/${id}/
+  cp $lib db/${id}/$(basename $lib)$suffix
+  echo "  -> Writing symbols to db/${id}/"
+
+  (dump_symbols $lib; dump_libc_start_main_ret $lib; dump_bin_sh $lib)  > db/${id}/"$(basename $lib)$suffix".symbols
+
+  [[ -f "db/${id}/info" ]] && return
+
   echo "  -> Writing version info"
-  echo "$info" > db/${id}.info
-  echo "$url" > db/${id}.url
+  echo "$info" > db/${id}/info
+  echo "$url" > db/${id}/url
+}
+
+process_debug() {
+  local lib=$1
+  local id=$2
+  local suffix=$3
+
+  echo "  -> Writing libc debug symbols to db/${id}/.debug/"
+  mkdir -p db/${id}/.debug
+  cp $lib db/${id}/.debug/$(basename $lib)$suffix
 }
 
 index_libc() {
@@ -65,39 +80,56 @@ index_libc() {
   local id="$2"
   local info="$3"
   local url="$4"
-  suffix=
-  cnt=1
   # Sometimes, the real libc.so is not matched with `libc.so*`.
-  libs=$(find "$tmp" -name 'libc.so*';find "$tmp" -name 'libc[-_.][a-z]*.so*')
-  [[ -z "$libs" ]] && die "Cannot locate the libc file"
-  for libc in $libs; do
+  libs=$(find "$tmp" -name '*.so*' | grep -v ".conf")
+  declare -A dejavu
+  [[ -z "$libs" ]] && die "Cannot locate any library file"
+  for lib in $libs; do
     # Some file matched can be ASCII files instead :(
-    if ! (file "$libc" | grep -q 'ELF\|symbolic link to') ; then
-      echo "  -> libc ${libc} is not an ELF file"
+    if ! (file "$lib" | grep -q 'ELF\|symbolic link to') ; then
+      echo "  -> library ${lib} is not an ELF file"
       continue  # Keep cnt and suffix as it
     fi
-    process_libc "$libc" "$id$suffix" "$info" "$url"
-    cnt=$((cnt+1))
-    suffix=_$cnt
+	[[ -z ${dejavu[$lib]} ]] && dejavu[$lib]=$((0))
+	process_libc "$lib" "$id" "$info" "$url" "${dejavu[$lib]}"
+	dejavu[$lib]=$((${dejavu[$lib]}+1))
+  done
+}
+
+index_debug() {
+  local tmp="$1"
+  local id="$2"
+  libs=$(find "$tmp" -name '*.so*' | grep -v ".conf")
+  # Usually, find's order is the same as libc one.
+  declare -A dejavu
+  if [[ -z "$libs" ]]; then
+    echo "  -> Cannot locate any debug file. Skipping"
+	return
+  fi
+  for lib in $libs; do
+  	[[ -z ${dejavu[$lib]} ]] && dejavu[$lib]=$((0))
+  	process_debug "$lib" "$id" "${dejavu[$lib]}"
+	dejavu[$lib]=$((${dejavu[$lib]}+1))
   done
 }
 
 check_id() {
   local id=$1
-  if [[ -e db/${id}.info ]]; then
-    echo "  -> Already have this version, 'rm ${PWD}/db/${id}.*' to force"
+  if [[ -d db/${id} ]]; then
+    echo "  -> Already have this version, 'rm -rf ${PWD}/db/${id}' to force"
     return 1
   fi
   return 0
 }
 
 requirements_general() {
-  which readelf 1>/dev/null 2>&1 || return
-  which perl    1>/dev/null 2>&1 || return
-  which objdump 1>/dev/null 2>&1 || return
-  which strings 1>/dev/null 2>&1 || return
-  which find    1>/dev/null 2>&1 || return
-  which grep    1>/dev/null 2>&1 || return
+  which readelf  1>/dev/null 2>&1 || return
+  which perl     1>/dev/null 2>&1 || return
+  which objdump  1>/dev/null 2>&1 || return
+  which strings  1>/dev/null 2>&1 || return
+  which find     1>/dev/null 2>&1 || return
+  which grep     1>/dev/null 2>&1 || return
+  which basename 1>/dev/null 2>&1 || return
   return 0
 }
 
@@ -132,12 +164,54 @@ get_debian() {
   rm -rf $tmp
 }
 
+get_debian_debug_symbols() {
+  local url=$1
+  local origin=$2
+  local info=$3
+  local pkgname=$4
+  local tmp=`mktemp -d`
+  echo "Getting debug symbols of $info"
+  echo "  -> Location: $url"
+  local id=`echo $origin | perl -n -e '/('"$pkgname"'[^\/]*)\./ && print $1'`
+  echo "  -> ID: $id"
+  echo "  -> Downloading debug symbol"
+  if ! wget "$url" 2>/dev/null -O $tmp/pkg.deb; then
+    echo >&2 "Failed to download debug symbol from $url. Skipping"
+	return
+  fi
+  echo "  -> Extracting debug symbol"
+  pushd $tmp 1>/dev/null
+  if ! ar x pkg.deb; then
+    echo >&2"ar failed. Skipping"
+	return
+  fi
+  if [ -f data.tar.zst ]; then
+    if ! zstd -d data.tar.zst; then
+	  echo >&2 "zstd failed. Skipping"
+	  return
+	fi
+    if ! tar xf data.tar; then
+	  echo >&2 "tar failed, Skipping"
+	  return
+	fi
+  else
+    if ! tar xf data.tar.*; then
+	  echo >&2 "tar failed, Skipping"
+	  return
+	fi
+  fi
+  popd 1>/dev/null
+  index_debug $tmp $id
+}
+
 get_all_debian() {
   local info=$1
   local url=$2
   local pkgname=$3
   for f in `wget $url/ -O - 2>/dev/null | grep -Eoh "$pkgname"'(-i386|-amd64|-x32)?_[^"]*(amd64|i386)\.deb' |grep -v "</a>"`; do
     get_debian "$url/$f" "$info" "$pkgname"
+    local debugfile=$(echo $f | sed -r "s/$pkgname'(-i386|-amd64|-x32)?'/$pkgname-dbg/g")
+	get_debian_debug_symbols "$url/$debugfile" "$url/$f" "$info" "$pkgname"
   done
   return 0
 }
@@ -150,6 +224,7 @@ requirements_debian() {
   which tar    1>/dev/null 2>&1 || return
   which grep   1>/dev/null 2>&1 || return
   which zstd   1>/dev/null 2>&1 || return
+  which sed    1>/dev/null 2>&1 || return
   return 0
 }
 
@@ -179,9 +254,34 @@ get_rpm() {
   rm -rf "$tmp"
 }
 
+get_rpm_debug_symbols() {
+  local url="$1"
+  [[ -z $(echo "$url" | sed -r "s/\s*$//g" | sed -r "s/^\s*//g" ) ]] && return
+  local origin="$2"
+  local info="$3"
+  local pkgname="$4"
+  local tmp="$(mktemp -d)"
+  echo "Getting debug symbols of $info"
+  echo "  -> Location: $url"
+  local id=$(echo "$origin" | perl -n -e '/('"$pkgname"'[^\/]*)\./ && print $1')
+  echo "  -> ID: $id"
+  echo "  -> Downloading debug symbol"
+  if ! wget --no-dns-cache --connect-timeout=30 "$url" 2>/dev/null -O "$tmp/pkg.rpm"; then
+    echo >&2 "Failed to download debug symbol from $url. It seems that $id does not have a debug symbol. Do not worry"
+	return
+  fi
+  echo "  -> Extracting debug symbol"
+  pushd "$tmp" 1>/dev/null
+  rpm2cpio pkg.rpm | cpio -id --quiet
+  popd 1>/dev/null
+  index_debug "$tmp" "$id"
+  rm -rf "$tmp"
+}
+
 get_all_rpm() {
   local info=$1
   local pkg=$2
+  local pkgdebug=$pkg-debuginfo
   local pkgname=$3
   local arch=$4
   local website="http://rpmfind.net"
@@ -195,15 +295,39 @@ get_all_rpm() {
     echo "Retrying..."
     sleep 1
   done
+  local debugsearchurl="$website/linux/rpm2html/search.php?query=$pkgdebug"
+  echo "Getting debug RPM package location: $info $pkgdebug $pkgname $arch"
+  for i in $(seq 1 3); do
+    dbgurls=$(wget "$debugsearchurl" -O - 2>/dev/null \
+	  | grep -oh "/[^']*${pkgname}[^']*\.$arch\.rpm")
+	[[ -z "$dbgurls" ]] || break
+	echo "Retrying..."
+	sleep 1
+  done
 
   if ! [[ -n "$urls" ]]; then
     echo >&2 "Failed to get RPM package URL for $info $pkg $pkgname $arch"
     return
   fi
+  declare -A rpmdebugs
+  if [[ -n "$dbgurls" ]]; then
+    echo "Building rpm & debug package mappings"
+    for original in $urls; do
+	  local currentpkgname=$(basename $original)
+	  local debugpkgname=$(echo $currentpkgname | sed 's/'$pkg'/'$pkgdebug'/g')
+	  for debug in $dbgurls; do
+	    if [[ -z $(echo $debug | grep "$debugpkgname") ]]; then
+		  continue
+		fi
+		rpmdebugs[$original]=$website$debug
+	  done
+	done
+  fi
 
   for url in $urls
   do
     get_rpm "$website$url" "$info" "$pkgname"
+	get_rpm_debug_symbols "${rpmdebugs[$url]}" "$website$url" "$info" "$pkgname"
     sleep .1
   done
 }
@@ -212,7 +336,7 @@ requirements_rpm() {
   which mktemp   1>/dev/null 2>&1 || return
   which perl     1>/dev/null 2>&1 || return
   which wget     1>/dev/null 2>&1 || return
-  which rpm2cpio || return
+  which rpm2cpio 1>/dev/null 2>&1 || return
   which cpio     1>/dev/null 2>&1 || return
   which grep     1>/dev/null 2>&1 || return
   return 0
@@ -225,6 +349,7 @@ get_from_filelistgz() {
   local website=$2
   local pkg=$3
   local arch=$4
+  local debugwebsite=$5
   echo "Getting package $pkg locations"
   local url=""
   for i in $(seq 1 3); do
@@ -237,9 +362,19 @@ get_from_filelistgz() {
     sleep 1
   done
   [[ -n "$urls" ]] || die "Failed to get package version"
+
   for url in $urls
   do
     get_rpm "$website/$url" "$info" "$pkg"
+	local slices=(${url//\// })
+	local systemver=${slices[1]}
+	local verslices=(${systemver//\./ })
+	local major=${verslices[0]}
+	echo $major
+
+	local debugname=$(echo $url | sed "s/glibc/glibc-debuginfo/g" | sed -r "s/[0-9]+\.[0-9]+\.[0-9]+/$major/g" | sed "s/\/os//g" | sed "s/\/Packages//g")
+	echo $debugname
+	get_rpm_debug_symbols "$debugwebsite/$debugname" "$website/$url" "$info" "$pkg"
     sleep .1
   done
 }
@@ -248,6 +383,7 @@ requirements_centos() {
   which wget       1>/dev/null 2>&1 || return
   which gzip       1>/dev/null 2>&1 || return
   which grep       1>/dev/null 2>&1 || return
+  which sed        1>/dev/null 2>&1 || return
   requirements_rpm || return
   return 0
 }
@@ -288,10 +424,99 @@ get_pkg() {
   rm -rf "$tmp"
 }
 
+get_pkg_debug() {
+  local info=$1
+  local original=$2
+  local pkgname=$3
+  local debugname=$4
+  local tmp="$(mktemp -d)"
+  echo "Getting debug symbol of "$pkgname
+
+  local id=$(echo "$original" | perl -n -e '/('"$pkgname"'[^\/]*)\.pkg\.tar\.(xz|zst)/ && print $1' | ( (echo "$original" | grep -q 'lib32') && sed 's/x86_64/x86/g' || cat))
+  local idslices=(${id//\-/ })
+  local version=${idslices[1]}
+  local pkgrel=${idslices[2]}
+  local arch=${idslices[3]}
+
+  pushd $tmp 1>/dev/null
+  # https://github.com/pwndbg/pwndbg/issues/340#issuecomment-431254792
+  echo "  -> Initializing svn repository"
+  if ! svn checkout --depth=empty svn://svn.archlinux.org/packages pkgs 1>/dev/null 2>&1; then
+    echo >&2 "Could not initialize the svn repository. Skipping"
+	popd 1>/dev/null
+	return
+  fi
+  pushd pkgs 1>/dev/null
+  if ! svn update $debugname 1>/dev/null 2>&1; then
+    echo >&2 "Could not checkout "$debugname". Skipping"
+	popd 1>/dev/null
+	popd 1>/dev/null
+	return
+  fi
+
+  pushd $debugname/repos/core-x86_64 1>/dev/null
+  echo "  -> Checking version"
+  local repoverraw=$(cat PKGBUILD | grep "pkgver")
+  local repoverslices=(${repoverraw//\=/ })
+  local repover=${repoverslices[1]}
+
+  local repopkgrelraw=$(cat PKGBUILD | grep "pkgrel")
+  local repopkgrelslices=(${repopkgrelraw//\=/ })
+  local repopkgrel=${repopkgrelslices[1]}
+
+  if [[ "$repover" != "$version" || "$pkgrel" != "$repopkgrel" ]] ; then
+    echo "  -> Version mismatches, package one is $version-$pkgrel and the other one is $repover-$repopkgrel. Skipping"
+	popd 1>/dev/null
+	popd 1>/dev/null
+	return
+  fi
+  
+  echo "  -> Replacing PKGBUILD file"
+  if ! sed -i "s#!strip#debug#" PKGBUILD 1>/dev/null 2>&1; then
+    echo >&2 "Could not replace PKGBUILD file. Skipping"
+  fi
+  echo "  -> Started building $id"
+  if ! makepkg --skipchecksums --nocheck 1>/dev/null 2>&1; then
+    echo >&2 "Could not build $id. Skipping"
+    popd 1>/dev/null
+    popd 1>/dev/null
+    popd 1>/dev/null
+	return
+  fi
+  echo "  -> Cleaning up the work environment"
+  find . -type d -exec rm -rf {} \; 1>/dev/null 2>&1
+  echo "  -> Extracting built package"
+  local debugpkg=$(ls | grep "debug" | grep ".tar.")
+  if (echo "$debugpkg" | grep -q '\.zst')
+  then
+    zstd -dq $debugpkg -o pkg.tar
+    tar xf pkg.tar --warning=none
+  fi
+  if (echo "$url" | grep -q '\.xz')
+  then
+    tar xJf $debugpkg --warning=none
+  fi
+
+  echo "  -> Removing unneeded symbols"
+  if grep -q "x86_64" <<< "$arch"; then
+    find usr/lib/debug -name "lib32" -type d -exec rm -rf {} \; 1>/dev/null 2>&1
+  else
+    find usr/lib/debug -name "lib" -type d -exec rm {} \; 1>/dev/null 2>&1
+  fi
+
+  popd 1>/dev/null
+  popd 1>/dev/null
+  popd 1>/dev/null
+
+  index_debug $tmp $id
+  rm -rf $tmp
+}
+
 get_all_pkg() {
   local info=$1
   local directory=$2
   local pkgname=$3
+  local debugname=$4
   echo "Getting package $info locations"
   local url=""
   for i in $(seq 1 3); do
@@ -308,19 +533,24 @@ get_all_pkg() {
   do
     get_pkg "$directory/$url" "$info" "$pkgname"
     sleep .1
+	[[ -z $debugname ]] && die 1
+	get_pkg_debug "$info" "$directory/$url" "$pkgname" "$debugname"
+	sleep 1
   done
 }
 
 requirements_pkg() {
-  which mktemp 1>/dev/null 2>&1 || return
-  which perl   1>/dev/null 2>&1 || return
-  which grep   1>/dev/null 2>&1 || return
-  which sed    1>/dev/null 2>&1 || return
-  which cat    1>/dev/null 2>&1 || return
-  which wget   1>/dev/null 2>&1 || return
-  which zstd   1>/dev/null 2>&1 || return
-  which tar    1>/dev/null 2>&1 || return
-  which xz     1>/dev/null 2>&1 || return
+  which mktemp  1>/dev/null 2>&1 || return
+  which perl    1>/dev/null 2>&1 || return
+  which grep    1>/dev/null 2>&1 || return
+  which sed     1>/dev/null 2>&1 || return
+  which cat     1>/dev/null 2>&1 || return
+  which wget    1>/dev/null 2>&1 || return
+  which zstd    1>/dev/null 2>&1 || return
+  which tar     1>/dev/null 2>&1 || return
+  which xz      1>/dev/null 2>&1 || return
+  which svn     1>/dev/null 2>&1 || return
+  which makepkg 1>/dev/null 2>&1 || return
   return 0
 }
 
@@ -350,6 +580,30 @@ get_apk() {
   rm -rf $tmp
 }
 
+get_apk_debug() {
+  local url=$1
+  local original=$2
+  local info="$2"229
+  local pkgname="$3"
+  local tmp=$(mktemp -d)
+
+  echo "Getting debug symbols of $info"
+  echo "  -> Location: $url"
+  local id=$(echo "$original" | perl -n -e '/('"$pkgname"'[^\/]*)\.apk/ && print $1')
+  echo "  -> ID: $id"
+  echo "  -> Downloading debug symbol"
+  if ! wget "$url" 2>/dev/null -O "$tmp/pkg.tar.gz"; then
+    echo >&2 "Failed to download debug symbol from $url. Skipping"
+	return
+  fi
+  echo "  -> Extracting debug symbol"
+  pushd $tmp 1>/dev/null
+  tar xzf pkg.tar.gz --warning=none
+  popd 1>/dev/null
+  index_debug "$tmp" "$id"
+  rm -rf $tmp
+}
+
 get_all_apk() {
   local info=$1
   local repo=$2
@@ -373,6 +627,8 @@ get_all_apk() {
   for url in $urls
   do
     get_apk "$directory$url" "$info" "$pkgname"
+	local debugurl=$(echo $f | sed -r "s/$pkgname/$pkgname-dbg/g")
+	get_apk_debug "$directory$debugurl" "$directory$url" "$info" "$pkgname"
     sleep .1
   done
 }
@@ -382,8 +638,9 @@ requirements_apk() {
   which perl   1>/dev/null 2>&1 || return
   which wget   1>/dev/null 2>&1 || return
   which tar    1>/dev/null 2>&1 || return
-  which gzip    1>/dev/null 2>&1 || return
+  which gzip   1>/dev/null 2>&1 || return
   which grep   1>/dev/null 2>&1 || return
+  which sed    1>/dev/null 2>&1 || return
   return 0
 }
 
@@ -401,11 +658,14 @@ get_all_launchpad() {
     echo "Launchpad: Series $series"
     local apiurl="https://api.launchpad.net/1.0/$distro/+archive/primary?ws.op=getPublishedBinaries&binary_name=$pkgname&exact_match=true&distro_arch_series=https://api.launchpad.net/1.0/$distro/$series/$arch"
     local url=""
+	local dbgurl=""
     urls=$(wget "$apiurl" -O - 2>/dev/null | jq '[ .entries[] | .build_link + "/+files/" + .binary_package_name + "_" + .source_package_version + "_" + (.distro_arch_series_link | split("/") | .[-1]) + ".deb" | ltrimstr("https://api.launchpad.net/1.0/") | "https://launchpad.net/" + . ] | unique | .[]')
     for url in $urls; do
       url=$(echo $url | grep -Eo '[^"]+')
       # some old packages are deleted. ignore those.
       get_debian "$url" "$info-$series" "$pkgname"
+	  dbgurl=$(echo $url | sed "s/$pkgname/$pkgname-dbg/g")
+	  get_debian_debug_symbols "$dbgurl" "$url" "$info-$series" "$pkgname"
     done
   done
 }
@@ -432,3 +692,4 @@ requirements_local() {
   which sha1sum 1>/dev/null 2>&1 || return
   return 0
 }
+

@@ -1,0 +1,35 @@
+#!/bin/bash
+
+patch_requirements() {
+  which realpath 2>&1 1>/dev/null || return
+  which patchelf 2>&1 1>/dev/null || return
+  return 0
+}
+
+if [[ $# -ne 2 ]]; then
+  echo >&2 "Usage: $# id elf"
+  exit 2
+fi
+
+id=$1
+targetelf=$(realpath $2)
+
+cd "$(dirname "$#")"
+. common/libc.sh
+
+ls -1 "db/${id}" >/dev/null 2>&1 || die "Invalid ID '$id'"
+
+interpreters=$(find "db/${id}" -name "ld[-_.][a-zA-Z0-9\.]*\.so*" | grep -v "debug")
+[[ -z "$interpreters" ]] && die "Cannot locate any ld.so"
+choseninterpreter=""
+for interpreter in $interpreters; do
+  if ! (file "$interpreter" | grep -q "ELF\|symbolic link to") ; then
+    continue
+  fi
+  choseninterpreter=$(realpath $interpreter)
+  break
+done
+
+
+patchelf --set-interpreter $choseninterpreter --set-rpath $(realpath "db/${id}") $targetelf 2>&1 1>/dev/null && echo "ELF patched" || echo "ELF patching failed"
+
