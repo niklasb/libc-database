@@ -202,6 +202,7 @@ get_debian_debug_symbols() {
   fi
   popd 1>/dev/null
   index_debug $tmp $id
+  rm -rf $tmp
 }
 
 get_all_debian() {
