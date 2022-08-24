@@ -45,7 +45,7 @@ dump_bin_sh() {
   fi
 }
 
-process_libc() {
+process_lib() {
   local lib=$1
   local id=$2
   local info=$3
@@ -54,9 +54,10 @@ process_libc() {
   echo "  -> Writing binary $lib to db/${id}/"
   mkdir -p db/${id}/
   cp $lib db/${id}/$(basename $lib)$suffix
-  echo "  -> Writing symbols to db/${id}/"
-
-  (dump_symbols $lib; dump_libc_start_main_ret $lib; dump_bin_sh $lib)  > db/${id}/"$(basename $lib)$suffix".symbols
+  if [[ $lib =~ .*libc[0-9\._]*\.so.* ]]; then
+    echo "  -> Writing symbols to db/${id}/"
+    (dump_symbols $lib; dump_libc_start_main_ret $lib; dump_bin_sh $lib)  > db/${id}/"$(basename $lib)$suffix".symbols
+  fi
 
   [[ -f "db/${id}/info" ]] && return
 
@@ -75,7 +76,7 @@ process_debug() {
   cp $lib db/${id}/.debug/$(basename $lib)$suffix
 }
 
-index_libc() {
+index_libs() {
   local tmp="$1"
   local id="$2"
   local info="$3"
@@ -91,7 +92,7 @@ index_libc() {
       continue  # Keep cnt and suffix as it
     fi
 	[[ -z ${dejavu[$lib]} ]] && dejavu[$lib]=$((0))
-	process_libc "$lib" "$id" "$info" "$url" "${dejavu[$lib]}"
+	process_lib "$lib" "$id" "$info" "$url" "${dejavu[$lib]}"
 	dejavu[$lib]=$((${dejavu[$lib]}+1))
   done
 }
@@ -160,7 +161,7 @@ get_debian() {
     tar xf data.tar.* || die "tar failed"
   fi
   popd 1>/dev/null
-  index_libc "$tmp" "$id" "$info" "$url"
+  index_libs "$tmp" "$id" "$info" "$url"
   rm -rf $tmp
 }
 
@@ -251,7 +252,7 @@ get_rpm() {
   (rpm2cpio pkg.rpm || die "rpm2cpio failed") | \
     (cpio -id --quiet || die "cpio failed")
   popd 1>/dev/null
-  index_libc "$tmp" "$id" "$info" "$url"
+  index_libs "$tmp" "$id" "$info" "$url"
   rm -rf "$tmp"
 }
 
@@ -421,7 +422,7 @@ get_pkg() {
     tar xJf pkg.tar.xz --warning=none
   fi
   popd 1>/dev/null
-  index_libc "$tmp" "$id" "$info" "$url"
+  index_libs "$tmp" "$id" "$info" "$url"
   rm -rf "$tmp"
 }
 
@@ -577,7 +578,7 @@ get_apk() {
   pushd $tmp 1>/dev/null
   tar xzf pkg.tar.gz --warning=none
   popd 1>/dev/null
-  index_libc "$tmp" "$id" "$info" "$url"
+  index_libs "$tmp" "$id" "$info" "$url"
   rm -rf $tmp
 }
 
@@ -686,7 +687,7 @@ add_local() {
   local id="local-`sha1sum $libc`"
   echo "Adding local libc $libc (id $id)"
   check_id $id || return
-  process_libc $libc $id $info
+  process_lib $libc $id $info
 }
 
 requirements_local() {
