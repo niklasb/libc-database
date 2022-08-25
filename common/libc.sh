@@ -54,7 +54,7 @@ process_lib() {
   echo "  -> Writing binary $lib to db/${id}/"
   mkdir -p db/${id}/
   cp $lib db/${id}/$(basename $lib)$suffix
-  if [[ $lib =~ .*libc[0-9\._]*\.so.* ]]; then
+  if [[ $lib =~ .*libc[-_\.][0-9\._a-zA-Z]*\.so.* ]]; then
     echo "  -> Writing symbols to db/${id}/"
     (dump_symbols $lib; dump_libc_start_main_ret $lib; dump_bin_sh $lib)  > db/${id}/"$(basename $lib)$suffix".symbols
   fi

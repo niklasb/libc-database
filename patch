@@ -1,20 +1,22 @@
 #!/bin/bash
 
 patch_requirements() {
-  which realpath 2>&1 1>/dev/null || return
-  which patchelf 2>&1 1>/dev/null || return
+  which realpath 1>/dev/null 2>&1 || return
+  which patchelf 1>/dev/null 2>&1 || return
   return 0
 }
 
 if [[ $# -ne 2 ]]; then
-  echo >&2 "Usage: $# id elf"
+  echo >&2 "Usage: $# id elf [interpreter_choice] [libc_choice]"
   exit 2
 fi
 
 id=$1
 targetelf=$(realpath $2)
+ldchoice=$3
+libcchoice=$4
 
-cd "$(dirname "$#")"
+cd "$(dirname $0)"
 . common/libc.sh
 
 if ! patch_requirements ; then
@@ -23,17 +25,46 @@ fi
 
 ls -1 "db/${id}" >/dev/null 2>&1 || die "Invalid ID '$id'"
 
-interpreters=$(find "db/${id}" -name "ld[-_.][a-zA-Z0-9\.]*\.so*" | grep -v "debug")
+interpreters=($(find "db/${id}" -name "ld[-_\.][a-zA-Z0-9\.-_]*\.so*" | grep -v "debug"))
 [[ -z "$interpreters" ]] && die "Cannot locate any ld.so"
 choseninterpreter=""
-for interpreter in $interpreters; do
-  if ! (file "$interpreter" | grep -q "ELF\|symbolic link to") ; then
-    continue
+interpretersamount=${#interpreters[@]}
+if [[ -z $ld_choice ]]; then
+  if [[ $interpretersamount -eq 1 ]]; then
+    ldchoice=0
+  else
+    echo "There are multiple interpreters found."
+    for i in "${!interpreters[@]}"; do
+      echo "[$i] -> ${interpreters[$i]}"
+    done
+    echo "Your choice (type any other words to quit):"
+    read ldchoice
   fi
-  choseninterpreter=$(realpath $interpreter)
-  break
-done
+fi
+choseninterpreter=${interpreters[$ldchoice]}
+if ! (file $choseninterpreter | grep -q "ELF\|symbolic link to"); then
+  die "Unknown interpreter"
+fi
 
+libcs=($(find "db/${id}" -name "libc[-_\.][a-zA-Z0-9\._-]*\.so*" | grep -v "debug"))
+chosenlibc=""
+libcamount=${#libcs[@]}
+if [[ -z $libc_choice ]]; then
+  if [[ $libcamount -eq 1 ]]; then
+    libcchoice=0
+  else
+    echo "There are multiple C libraries found."
+	for i in "${!libcs[@]}"; do
+	  echo "[$i] -> ${libcs[$i]}"
+	done
+	echo "Your choice (type any other words to quit):"
+	read libcchoice
+  fi
+fi
+chosenlibc=${libcs[$libcchoice]}
+if ! (file $chosenlibc | grep -q "ELF\|symbolic link to"); then
+  die "Unknown libc"
+fi
 
-patchelf --set-interpreter $choseninterpreter --set-rpath $(realpath "db/${id}") $targetelf 2>&1 1>/dev/null && echo "ELF patched" || echo "ELF patching failed"
+patchelf --set-interpreter $(realpath $choseninterpreter) --replace-needed libc.so.6 $(realpath $chosenlibc) $targetelf 2>&1 1>/dev/null && echo "ELF patched" || echo "ELF patching failed"
 
