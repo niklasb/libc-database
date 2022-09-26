@@ -50,13 +50,12 @@ process_lib() {
   local id=$2
   local info=$3
   local url=$4
-  local suffix=$5
   echo "  -> Writing binary $lib to db/${id}/"
   mkdir -p db/${id}/
-  cp $lib db/${id}/$(basename $lib)$suffix
+  cp $lib db/${id}/$(basename $lib)
   if [[ $lib =~ .*libc[-_\.][0-9\._a-zA-Z]*\.so.* ]]; then
     echo "  -> Writing symbols to db/${id}/"
-    (dump_symbols $lib; dump_libc_start_main_ret $lib; dump_bin_sh $lib)  > db/${id}/"$(basename $lib)$suffix".symbols
+    (dump_symbols $lib; dump_libc_start_main_ret $lib; dump_bin_sh $lib)  > db/${id}/"$(basename $lib)".symbols
   fi
 
   [[ -f "db/${id}/info" ]] && return
@@ -69,11 +68,10 @@ process_lib() {
 process_debug() {
   local lib=$1
   local id=$2
-  local suffix=$3
 
   echo "  -> Writing libc debug symbols to db/${id}/.debug/"
   mkdir -p db/${id}/.debug
-  cp $lib db/${id}/.debug/$(basename $lib)$suffix
+  cp $lib db/${id}/.debug/$(basename $lib)
 }
 
 index_libs() {
@@ -83,7 +81,6 @@ index_libs() {
   local url="$4"
   # Sometimes, the real libc.so is not matched with `libc.so*`.
   libs=$(find "$tmp" -name '*.so*' | grep -v ".conf")
-  declare -A dejavu
   [[ -z "$libs" ]] && die "Cannot locate any library file"
   for lib in $libs; do
     # Some file matched can be ASCII files instead :(
@@ -91,9 +88,7 @@ index_libs() {
       echo "  -> library ${lib} is not an ELF file"
       continue  # Keep cnt and suffix as it
     fi
-	[[ -z ${dejavu[$lib]} ]] && dejavu[$lib]=$((0))
-	process_lib "$lib" "$id" "$info" "$url" "${dejavu[$lib]}"
-	dejavu[$lib]=$((${dejavu[$lib]}+1))
+	process_lib "$lib" "$id" "$info" "$url"
   done
 }
 
@@ -102,15 +97,12 @@ index_debug() {
   local id="$2"
   libs=$(find "$tmp" -name '*.so*' | grep -v ".conf")
   # Usually, find's order is the same as libc one.
-  declare -A dejavu
   if [[ -z "$libs" ]]; then
     echo "  -> Cannot locate any debug file. Skipping"
 	return
   fi
   for lib in $libs; do
-  	[[ -z ${dejavu[$lib]} ]] && dejavu[$lib]=$((0))
-  	process_debug "$lib" "$id" "${dejavu[$lib]}"
-	dejavu[$lib]=$((${dejavu[$lib]}+1))
+  	process_debug "$lib" "$id"
   done
 }
 
@@ -212,7 +204,7 @@ get_all_debian() {
   local pkgname=$3
   for f in `wget $url/ -O - 2>/dev/null | grep -Eoh "$pkgname"'(-i386|-amd64|-x32)?_[^"]*(amd64|i386)\.deb' |grep -v "</a>"`; do
     get_debian "$url/$f" "$info" "$pkgname"
-    local debugfile=$(echo $f | sed -r "s/$pkgname'(-i386|-amd64|-x32)?'/$pkgname-dbg/g")
+    local debugfile=$(echo $f | sed -r "s/$pkgname(-i386|-amd64|-x32)?/$pkgname-dbg/g")
 	get_debian_debug_symbols "$url/$debugfile" "$url/$f" "$info" "$pkgname"
   done
   return 0
@@ -372,9 +364,8 @@ get_from_filelistgz() {
 	local systemver=${slices[1]}
 	local verslices=(${systemver//\./ })
 	local major=${verslices[0]}
-	echo $major
 
-	local debugname=$(echo $url | sed "s/glibc/glibc-debuginfo/g" | sed -r "s/[0-9]+\.[0-9]+\.[0-9]+/$major/g" | sed "s/\/os//g" | sed "s/\/Packages//g")
+	local debugname=$(echo $url | sed "s/updates//g" | sed "s/BaseOS//g" | sed "s/glibc/glibc-debuginfo/g" | sed -r "s/[0-9]+\.[0-9]+\.[0-9]+/$major/g" | sed "s/\/os//g" | sed "s/\/Packages//g")
 	echo $debugname
 	get_rpm_debug_symbols "$debugwebsite/$debugname" "$website/$url" "$info" "$pkg"
     sleep .1
