@@ -2,8 +2,8 @@ import os
 
 ES_INDEX_NAME = 'libcsearch'
 
-# ES_HOST = 'localhost'
-ES_HOST = 'es01'
+# ES_HOST = 'http://localhost:9200'
+ES_HOST = 'http://es01:9200'
 
 # DB_DIR = os.path.dirname(os.path.abspath(__file__)) + '/../db'
 DB_DIR = '/db'
