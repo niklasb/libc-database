@@ -396,7 +396,7 @@ get_all_launchpad() {
   local arch="$4"
 
   local series=""
-  for series in $(wget "https://api.launchpad.net/1.0/$distro/series" -O - 2>/dev/null | jq '.entries[] | .name'); do
+  for series in $(wget "https://api.launchpad.net/1.0/$distro/series" -O - 2>/dev/null | jq '.entries[] | select( .status != "Obsolete" ) | .name'); do
     series=$(echo $series | grep -Eo '[^"]+')
     echo "Launchpad: Series $series"
     local apiurl="https://api.launchpad.net/1.0/$distro/+archive/primary?ws.op=getPublishedBinaries&binary_name=$pkgname&exact_match=true&distro_arch_series=https://api.launchpad.net/1.0/$distro/$series/$arch"
