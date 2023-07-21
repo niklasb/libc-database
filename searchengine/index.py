@@ -37,12 +37,12 @@ if __name__ == '__main__':
     p.add_argument('dir')
     args = p.parse_args()
 
-    es = Elasticsearch()
+    es = Elasticsearch(hosts=["http://localhost:9200"])
 
     if args.fresh:
-        es.indices.delete(args.index, ignore=[404])
+        es.indices.delete(index=args.index, ignore=[404])
 
-    es.indices.create(args.index, ignore=[400])
+    es.indices.create(index=args.index, ignore=[400])
     es.indices.put_mapping(index=args.index, doc_type='libc', body={
         'libc': {
             "properties": {
@@ -98,7 +98,7 @@ if __name__ == '__main__':
         buildid = get_build_id(libc_fname)
         if buildid:
             doc['buildid'] = buildid
-        es.create(index=args.index, id=id, body=doc)
+        es.create(index=args.index, id=id, document=doc)
 
     es.indices.refresh(index=args.index)
 

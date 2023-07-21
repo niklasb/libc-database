@@ -57,7 +57,7 @@ def find(body, extra_symbols=[]):
         )
 
     query = {"bool": {"filter": filters}}
-    res = es.search(index=config.ES_INDEX_NAME, body={"query": query})
+    res = es.search(index=config.ES_INDEX_NAME, query=query)
 
     libcs = []
     for hit in res['hits']['hits']:

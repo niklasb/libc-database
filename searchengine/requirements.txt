@@ -1,4 +1,4 @@
-elasticsearch
+elasticsearch>=7.16,<8
 connexion
 uwsgi
 flask-cors

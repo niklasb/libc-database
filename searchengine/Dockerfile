@@ -1,4 +1,4 @@
-FROM python:3.8-slim-buster AS uwsgi
+FROM python:3.10-slim-bullseye AS uwsgi
 
 ENV PYTHONUNBUFFERED 1
 WORKDIR /app
