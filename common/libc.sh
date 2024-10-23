@@ -252,6 +252,37 @@ requirements_centos() {
   return 0
 }
 
+# ===== CentOS-Stream ===== #
+
+get_from_fullfiletimelist() {
+  local info=$1
+  local website=$2
+  local pkg=$3
+  local arch=$4
+  echo "Getting package $pkg locations"
+  local url=""
+  for i in $(seq 1 3); do
+    urls=$(wget "$website/fullfiletimelist" -O - 2>/dev/null \
+      | grep -h "$pkg-[0-9]" \
+      | grep -h "$arch\.rpm" \
+      | awk '{print $4}')
+    [[ -z "$urls" ]] || break
+    echo "Retrying..."
+    sleep 1
+  done
+  [[ -n "$urls" ]] || die "Failed to get package version"
+  for url in $urls
+  do
+    get_rpm "$website/$url" "$info" "$pkg"
+    sleep .1
+  done
+}
+
+requirements_centos_stream() {
+  which awk       1>/dev/null 2>&1 || return
+  requirements_centos || return
+  return 0
+}
 
 # ===== Arch ===== #
 

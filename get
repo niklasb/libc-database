@@ -49,8 +49,16 @@ categories[cntr_category]="centos"
 requirements["centos"]="requirements_centos"
 cntr_category=$((cntr_category + 1))
 centos() {
-  get_from_filelistgz centos-glibc http://mirror.centos.org/centos/ glibc i686
-  get_from_filelistgz centos-glibc http://mirror.centos.org/centos/ glibc x86_64
+  get_from_filelistgz centos-glibc https://vault.centos.org/ glibc i686
+  get_from_filelistgz centos-glibc https://vault.centos.org/ glibc x86_64
+}
+
+categories[cntr_category]="centos_stream"
+requirements["centos_stream"]="requirements_centos_stream"
+cntr_category=$((cntr_category + 1))
+centos_stream() {
+  get_from_fullfiletimelist centos-glibc https://mirror.stream.centos.org/ glibc i686
+  get_from_fullfiletimelist centos-glibc https://mirror.stream.centos.org/ glibc x86_64
 }
 
 categories[cntr_category]="arch"
@@ -82,6 +90,13 @@ alpine() {
       v3.10
       v3.11
       v3.12
+      v3.13
+      v3.14
+      v3.15
+      v3.16
+      v3.17
+      v3.18
+      v3.19
   )
 
   for version in "${alpine_versions[@]}"; do
