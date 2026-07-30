@@ -15,6 +15,7 @@ database:
 
     $ ./get  # List categories
     $ ./get ubuntu debian  # Download Ubuntu's and Debian's libc, old default behavior
+    $ ./get ubuntu-arm  # Download Ubuntu's arm64/armhf libc from ports.ubuntu.com
     $ ./get all  # Download all categories. Can take a while!
 
 You can also add a custom libc to your database.

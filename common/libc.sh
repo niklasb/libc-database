@@ -136,7 +136,11 @@ get_all_debian() {
   local info=$1
   local url=$2
   local pkgname=$3
-  for f in `wget $url/ -O - 2>/dev/null | grep -Eoh "$pkgname"'(-i386|-amd64|-x32)?_[^"]*(amd64|i386)\.deb' |grep -v "</a>"`; do
+  # arch is a grep -E alternation of Debian architecture names to match in the
+  # .deb filename, e.g. "amd64|i386" or "arm64|armhf". Defaults to the
+  # traditional x86 architectures for backwards compatibility.
+  local arch="${4:-amd64|i386}"
+  for f in `wget $url/ -O - 2>/dev/null | grep -Eoh "$pkgname"'(-i386|-amd64|-x32|-armel|-armhf|-arm64)?_[^"]*('"$arch"')\.deb' |grep -v "</a>"`; do
     get_debian "$url/$f" "$info" "$pkgname"
   done
   return 0
