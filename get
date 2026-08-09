@@ -97,6 +97,11 @@ alpine() {
       v3.17
       v3.18
       v3.19
+      v3.20
+      v3.21
+      v3.22
+      v3.23
+      v3.24
   )
 
   for version in "${alpine_versions[@]}"; do
