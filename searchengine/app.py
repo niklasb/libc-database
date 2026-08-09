@@ -15,6 +15,9 @@ log = logging.getLogger('wsgi')
 
 log.info(f'Using elasticsearch server {config.ES_HOST}, index {config.ES_INDEX_NAME}')
 
+DEFAULT_FIND_LIMIT = 10
+MAX_FIND_LIMIT = 100
+
 
 @lru_cache(maxsize=2000)
 def get_symbols(id):
@@ -35,7 +38,36 @@ def get_libs_url(id):
         return f.read().strip()
 
 
-def find(body, extra_symbols=[]):
+def _parse_pagination(limit, offset):
+    try:
+        limit = DEFAULT_FIND_LIMIT if limit is None else int(limit)
+        offset = 0 if offset is None else int(offset)
+    except (TypeError, ValueError):
+        return problem(
+            status=400,
+            title='Bad request',
+            detail='limit and offset must be integers',
+        )
+
+    if limit < 1 or limit > MAX_FIND_LIMIT:
+        return problem(
+            status=400,
+            title='Bad request',
+            detail=f'limit must be between 1 and {MAX_FIND_LIMIT}',
+        )
+
+    if offset < 0:
+        return problem(
+            status=400,
+            title='Bad request',
+            detail='offset must be non-negative',
+        )
+
+    return limit, offset
+
+
+def _search_libcs(body, extra_symbols=None, limit=DEFAULT_FIND_LIMIT, offset=0, include_metadata=True):
+    extra_symbols = extra_symbols or []
     filters = []
 
     for h in ('id', 'md5', 'sha1', 'sha256', 'buildid'):
@@ -59,7 +91,13 @@ def find(body, extra_symbols=[]):
         )
 
     query = {"bool": {"filter": filters}}
-    res = es.search(index=config.ES_INDEX_NAME, query=query)
+    res = es.search(
+        index=config.ES_INDEX_NAME,
+        query=query,
+        from_=offset,
+        size=limit,
+        track_total_hits=True,
+    )
 
     libcs = []
     for hit in res['hits']['hits']:
@@ -87,11 +125,47 @@ def find(body, extra_symbols=[]):
             'symbols_url': config.ALL_SYMBOLS_URL.format(id),
             'libs_url': get_libs_url(id),
         })
-    return libcs
+
+    total = res['hits']['total']
+    if isinstance(total, dict):
+        total = total.get('value', len(libcs))
+
+    if not include_metadata:
+        return libcs
+
+    return {
+        'results': libcs,
+        'total': total,
+        'limit': limit,
+        'offset': offset,
+        'count': len(libcs),
+        'has_more': offset + len(libcs) < total,
+    }
+
+
+def find(body, limit=None, offset=None, extra_symbols=[]):
+    include_metadata = limit is not None or offset is not None
+    pagination = _parse_pagination(limit, offset)
+    if not isinstance(pagination, tuple):
+        return pagination
+
+    limit, offset = pagination
+    return _search_libcs(
+        body,
+        extra_symbols=extra_symbols,
+        limit=limit,
+        offset=offset,
+        include_metadata=include_metadata,
+    )
 
 
 def dump(id, body):
-    res = find({'id': id}, extra_symbols=body['symbols'])
+    res = _search_libcs(
+        {'id': id},
+        extra_symbols=body.get('symbols', []),
+        limit=1,
+        include_metadata=False,
+    )
     if not res:
         return problem(
             status=404,

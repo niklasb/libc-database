@@ -17,9 +17,19 @@ import {
 
 
 const API_BASE = 'https://libc.rip/api';
+const DEFAULT_LIMIT = 10;
 
-const api = async (path, data) => {
-  let resp = await fetch(`${API_BASE}${path}`, {
+const api = async (path, data, params = {}) => {
+  const query = new URLSearchParams();
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) {
+      query.set(key, value);
+    }
+  });
+
+  const url = query.toString() ? `${API_BASE}${path}?${query.toString()}` : `${API_BASE}${path}`;
+  let resp = await fetch(url, {
     method: 'POST',
     mode: 'cors',
     cache: 'no-cache',
@@ -226,17 +236,36 @@ function Result({ id, buildid, md5, symbols, download_url, symbols_url }) {
 function App() {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
+  const [lastQuery, setLastQuery] = useState(null);
 
-  const onSearch = (data) => {
+  const onSearch = (data, offset = 0) => {
+    setLastQuery(data);
     setLoading(true);
     (async () => {
       try {
-        setResults(await api('/find', data));
+        setResults(await api('/find', data, { limit: DEFAULT_LIMIT, offset }));
       } finally {
         setLoading(false);
       }
     })();
   };
+
+  const normalizedResults = Array.isArray(results)
+    ? {
+        results,
+        total: results.length,
+        offset: 0,
+        limit: results.length,
+        count: results.length,
+        has_more: false,
+      }
+    : results;
+  const displayedResults = normalizedResults?.results ?? [];
+  const totalResults = normalizedResults?.total ?? 0;
+  const currentOffset = normalizedResults?.offset ?? 0;
+  const currentLimit = normalizedResults?.limit ?? DEFAULT_LIMIT;
+  const canGoBack = currentOffset > 0;
+  const canGoForward = normalizedResults?.has_more ?? false;
 
   return (
     <div className="App">
@@ -255,7 +284,32 @@ function App() {
         <Grid item xs={12} md={6}>
           <h3>Results</h3>
           {loading && <CircularProgress />}
-          {results !== null && results.map((x) => <Result key={x.id} {...x} />)}
+          {results !== null && (
+            <>
+              <p>
+                Showing {displayedResults.length} of {totalResults} results
+              </p>
+              {displayedResults.map((x) => <Result key={x.id} {...x} />)}
+              <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
+                <Button
+                  type="button"
+                  variant="outlined"
+                  disabled={!canGoBack || loading || !lastQuery}
+                  onClick={() => onSearch(lastQuery, Math.max(0, currentOffset - currentLimit))}
+                >
+                  Previous
+                </Button>
+                <Button
+                  type="button"
+                  variant="outlined"
+                  disabled={!canGoForward || loading || !lastQuery}
+                  onClick={() => onSearch(lastQuery, currentOffset + currentLimit)}
+                >
+                  Next
+                </Button>
+              </Stack>
+            </>
+          )}
         </Grid>
       </Grid>
     </div>

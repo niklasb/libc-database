@@ -11,6 +11,22 @@ paths:
       - libcsearch
       description: |-
         Look up libc by various attributes
+      parameters:
+      - in: query
+        name: limit
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+        required: false
+        description: Maximum number of results to return.
+      - in: query
+        name: offset
+        schema:
+          type: integer
+          minimum: 0
+        required: false
+        description: Number of matches to skip before returning results.
       requestBody:
         content:
           application/json:
@@ -22,9 +38,11 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Libc'
+                oneOf:
+                - type: array
+                  items:
+                    $ref: '#/components/schemas/Libc'
+                - $ref: '#/components/schemas/PaginatedLibcs'
           description: ''
 
   /libc/{id}:
@@ -94,6 +112,35 @@ components:
           type: array
           items:
             type: string
+
+    PaginatedLibcs:
+      type: object
+      required:
+      - results
+      - total
+      - limit
+      - offset
+      - count
+      - has_more
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Libc'
+        total:
+          type: integer
+          minimum: 0
+        limit:
+          type: integer
+          minimum: 1
+        offset:
+          type: integer
+          minimum: 0
+        count:
+          type: integer
+          minimum: 0
+        has_more:
+          type: boolean
 
 
 servers:
