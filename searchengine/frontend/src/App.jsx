@@ -264,6 +264,9 @@ function App() {
   const totalResults = normalizedResults?.total ?? 0;
   const currentOffset = normalizedResults?.offset ?? 0;
   const currentLimit = normalizedResults?.limit ?? DEFAULT_LIMIT;
+  const currentCount = normalizedResults?.count ?? displayedResults.length;
+  const startResult = currentCount > 0 ? currentOffset + 1 : 0;
+  const endResult = currentCount > 0 ? Math.min(totalResults, currentOffset + currentCount) : 0;
   const canGoBack = currentOffset > 0;
   const canGoForward = normalizedResults?.has_more ?? false;
 
@@ -287,7 +290,7 @@ function App() {
           {results !== null && (
             <>
               <p>
-                Showing {displayedResults.length} of {totalResults} results
+                Showing {currentCount > 0 ? `${startResult}-${endResult}` : '0'} of {totalResults} results
               </p>
               {displayedResults.map((x) => <Result key={x.id} {...x} />)}
               <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
