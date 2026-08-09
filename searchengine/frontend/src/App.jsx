@@ -7,6 +7,7 @@ import {
   CircularProgress,
   Grid,
   Link,
+  MenuItem,
   Stack,
   Table,
   TableBody,
@@ -18,6 +19,7 @@ import {
 
 const API_BASE = 'https://libc.rip/api';
 const DEFAULT_LIMIT = 10;
+const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 
 const api = async (path, data, params = {}) => {
   const query = new URLSearchParams();
@@ -237,17 +239,27 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
   const [lastQuery, setLastQuery] = useState(null);
+  const [pageSize, setPageSize] = useState(DEFAULT_LIMIT);
 
-  const onSearch = (data, offset = 0) => {
+  const onSearch = (data, offset = 0, limit = pageSize) => {
     setLastQuery(data);
     setLoading(true);
     (async () => {
       try {
-        setResults(await api('/find', data, { limit: DEFAULT_LIMIT, offset }));
+        setResults(await api('/find', data, { limit, offset }));
       } finally {
         setLoading(false);
       }
     })();
+  };
+
+  const onPageSizeChange = (evt) => {
+    const nextPageSize = Number(evt.target.value);
+    setPageSize(nextPageSize);
+
+    if (lastQuery !== null) {
+      onSearch(lastQuery, 0, nextPageSize);
+    }
   };
 
   const normalizedResults = Array.isArray(results)
@@ -293,7 +305,20 @@ function App() {
                 Showing {currentCount > 0 ? `${startResult}-${endResult}` : '0'} of {totalResults} results
               </p>
               {displayedResults.map((x) => <Result key={x.id} {...x} />)}
-              <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ mt: 2, alignItems: { xs: 'stretch', sm: 'center' } }}>
+                <TextField
+                  select
+                  label="Page size"
+                  value={pageSize}
+                  onChange={onPageSizeChange}
+                  sx={{ minWidth: 140 }}
+                >
+                  {PAGE_SIZE_OPTIONS.map((size) => (
+                    <MenuItem key={size} value={size}>
+                      {size}
+                    </MenuItem>
+                  ))}
+                </TextField>
                 <Button
                   type="button"
                   variant="outlined"
