@@ -1,5 +1,10 @@
 .App {
-  /*text-align: center;*/
   padding: 1rem;
-  font-size: 90%;
+  font-size: 0.95rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.findbutton {
+  margin-top: 0.25rem;
 }
