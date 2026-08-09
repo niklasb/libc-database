@@ -1,4 +1,5 @@
-elasticsearch>=7.16,<8
-connexion
-uwsgi
-flask-cors
+elasticsearch>=7.17,<8
+connexion[uvicorn]>=3,<4
+gunicorn
+starlette
+httpx2

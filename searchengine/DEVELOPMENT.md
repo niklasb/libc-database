@@ -36,10 +36,10 @@ docker-compose down --volumes --rmi all
 ```
 
 
-## UWSGI logging
+## Gunicorn logging
 
-To get app logs from UWSGI:
+To get app logs from Gunicorn:
 
 ```sh
-docker logs searchengine_uwsgi_1
+docker logs searchengine_gunicorn_1
 ```

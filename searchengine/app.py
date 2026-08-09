@@ -1,9 +1,11 @@
 import logging
 from functools import lru_cache
+from pathlib import Path
 
-import connexion
+from connexion import AsyncApp, problem
+from connexion.middleware import MiddlewarePosition
+from starlette.middleware.cors import CORSMiddleware
 from elasticsearch import Elasticsearch
-from flask_cors import CORS
 
 import config
 
@@ -50,7 +52,7 @@ def find(body, extra_symbols=[]):
 
 
     if not filters:
-        return connexion.problem(
+        return problem(
             status=400,
             title='Bad request',
             detail='must provide at least one filter',
@@ -91,7 +93,7 @@ def find(body, extra_symbols=[]):
 def dump(id, body):
     res = find({'id': id}, extra_symbols=body['symbols'])
     if not res:
-        return connexion.problem(
+        return problem(
             status=404,
             title='Not found',
             detail=f'Unknown ID: {id}'
@@ -100,9 +102,16 @@ def dump(id, body):
     return res[0]
 
 
-app = connexion.App(__name__, specification_dir='.')
+app = AsyncApp(__name__, specification_dir='.')
+app.add_middleware(
+    CORSMiddleware,
+    position=MiddlewarePosition.BEFORE_EXCEPTION,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.add_api('api.yml')
-CORS(app.app)
 
 if __name__ == '__main__':
-    app.run(port=8080, host='127.0.0.1', debug=True)
+    app.run(f"{Path(__file__).stem}:app",port=8080, host='127.0.0.1', debug=True)
