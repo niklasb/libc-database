@@ -10,4 +10,7 @@ COPY . /app
 
 EXPOSE 8000
 
-CMD gunicorn -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8000 app:app
+CMD gunicorn -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8000 \
+	--workers 4 --timeout 30 \
+	--limit-request-line 262144 --limit-request-field_size 262144 \
+	app:app
