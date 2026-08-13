@@ -24,6 +24,19 @@ ubuntu() {
   get_all_debian ubuntu-old-dietlibc http://old-releases.ubuntu.com/ubuntu/pool/universe/d/dietlibc/ dietlibc
 }
 
+categories[cntr_category]="ubuntu-arm"
+requirements["ubuntu-arm"]="requirements_debian"
+cntr_category=$((cntr_category + 1))
+ubuntu_arm_archs="arm64|armhf"
+ubuntu-arm() {
+  # Ubuntu ports archive hosts arm64/armhf (and other non-x86) builds,
+  # including security updates, all under the same pool directory.
+  get_all_debian ubuntu-arm-eglibc http://ports.ubuntu.com/ubuntu-ports/pool/main/e/eglibc/ libc6 "$ubuntu_arm_archs"
+  get_all_debian ubuntu-arm-glibc http://ports.ubuntu.com/ubuntu-ports/pool/main/g/glibc/ libc6 "$ubuntu_arm_archs"
+  get_all_debian ubuntu-arm-musl http://ports.ubuntu.com/ubuntu-ports/pool/universe/m/musl/ musl "$ubuntu_arm_archs"
+  get_all_debian ubuntu-arm-dietlibc http://ports.ubuntu.com/ubuntu-ports/pool/universe/d/dietlibc/ dietlibc "$ubuntu_arm_archs"
+}
+
 categories[cntr_category]="debian"
 requirements["debian"]="requirements_debian"
 cntr_category=$((cntr_category + 1))

@@ -8,7 +8,10 @@ die() {
 }
 
 dump_symbols() {
-  readelf -Ws $1 | perl -n -e '/: (\w+)\s+\w+\s+(?:FUNC|OBJECT)\s+(?:\w+\s+){3}(\w+)\b(?:@@GLIBC)?/ && print "$2 $1\n"' | sort -u
+  # Force byte-order (C locale) sorting: under locale-aware collation (e.g.
+  # en_US.UTF-8), `sort -u` can treat symbols differing only by leading
+  # underscores as equal (e.g. "__dup2" and "dup2"), silently dropping one.
+  readelf -Ws $1 | perl -n -e '/: (\w+)\s+\w+\s+(?:FUNC|OBJECT)\s+(?:\w+\s+){3}(\w+)\b(?:@@GLIBC)?/ && print "$2 $1\n"' | LC_ALL=C sort -u
 }
 
 extract_label() {
@@ -16,9 +19,13 @@ extract_label() {
 }
 
 dump_libc_start_main_ret() {
+  # Match the "call" instruction on the relevant architecture: x86 uses
+  # "call"; ARM/AArch64 use "bl" (direct branch-with-link), "blr" (AArch64
+  # register-indirect branch-with-link) or "blx" (ARM/Thumb register-indirect
+  # branch-with-link, used to call the app-specific main()).
   local call_main=`objdump -D $1 \
     | grep -EA 100 '<__libc_start_main.*>:' \
-    | grep call \
+    | grep -E '\b(call|bl|blr|blx)\b' \
     | grep -EB 1 '<exit.*>' \
     | head -n 1 \
     | extract_label`
@@ -27,7 +34,7 @@ dump_libc_start_main_ret() {
   if [[ "$call_main" == "" ]]; then
     local call_main=`objdump -D $1 \
       | grep -EB 100 '<__libc_start_main.*>:' \
-      | grep call \
+      | grep -E '\b(call|bl|blr|blx)\b' \
       | grep -EB 1 '<exit.*>' \
       | head -n 1 \
       | extract_label`
@@ -136,7 +143,11 @@ get_all_debian() {
   local info=$1
   local url=$2
   local pkgname=$3
-  for f in `wget $url/ -O - 2>/dev/null | grep -Eoh "$pkgname"'(-i386|-amd64|-x32)?_[^"]*(amd64|i386)\.deb' |grep -v "</a>"`; do
+  # arch is a grep -E alternation of Debian architecture names to match in the
+  # .deb filename, e.g. "amd64|i386" or "arm64|armhf". Defaults to the
+  # traditional x86 architectures for backwards compatibility.
+  local arch="${4:-amd64|i386}"
+  for f in `wget $url/ -O - 2>/dev/null | grep -Eoh "$pkgname"'(-i386|-amd64|-x32|-armel|-armhf|-arm64)?_[^"]*('"$arch"')\.deb' |grep -v "</a>"`; do
     get_debian "$url/$f" "$info" "$pkgname"
   done
   return 0

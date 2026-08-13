@@ -35,8 +35,16 @@ download_single() {
   popd 1>/dev/null
 
   mkdir libs/$id
-  cp $tmp/lib/*/* libs/$id 2>/dev/null || cp $tmp/lib32/* libs/$id 2>/dev/null \
-    || die "Failed to save. Check it manually $tmp"
+  # Depending on the distro/architecture and whether merged-/usr is in use,
+  # the shared libraries can live under lib/<triplet>, usr/lib/<triplet>
+  # (e.g. modern amd64/arm64 packages), lib32 (i386 multiarch on amd64), or
+  # lib64/usr/lib64 (amd64 multiarch on i386, e.g. libc6-amd64).
+  # Only copy regular files (not subdirs like gconv/, audit/), and rely on
+  # find succeeding rather than cp's exit code, since cp exits non-zero
+  # whenever a directory is among its arguments even if all files copied.
+  find $tmp/lib/*/ $tmp/usr/lib/*/ $tmp/lib32/ $tmp/lib64/ $tmp/usr/lib64/ \
+    -maxdepth 1 -type f -exec cp -t libs/$id {} + 2>/dev/null
+  [ "$(ls -A libs/$id 2>/dev/null)" ] || die "Failed to save. Check it manually $tmp"
   echo "  -> Package saved to libs/$id"
 
   rm -rf $tmp
