@@ -11,6 +11,19 @@ usage() {
   exit 2
 }
 
+extract_package(){
+  # expect: url
+  # result: package from url is extracted into $tmp. runtime is cd'd into $tmp; caller expected to popd out.
+  echo "  -> Location: $1"
+  local tmp=`mktemp -d`
+  echo "  -> Downloading package"
+  wget "$1" 2>/dev/null -O "$tmp/pkg.deb" || die "Failed to download package from $1"
+  echo "  -> Extracting package"
+
+  pushd "$tmp" 1>/dev/null
+  ar x pkg.deb || die "ar failed"
+}
+
 download_single() {
   local id=$1
   echo "Getting $id"
@@ -23,15 +36,9 @@ download_single() {
   fi
 
   local url="$(cat "db/$1.url")"
-  echo "  -> Location: $url"
-  local tmp=`mktemp -d`
-  echo "  -> Downloading package"
-  wget "$url" 2>/dev/null -O $tmp/pkg.deb || die "Failed to download package from $url"
-  echo "  -> Extracting package"
-
-  pushd $tmp 1>/dev/null
-  ar x pkg.deb || die "ar failed"
+  extract_package "$url"
   tar xf data.tar.* || die "tar failed"
+  local tmp="$PWD"
   popd 1>/dev/null
 
   mkdir libs/$id
@@ -39,10 +46,59 @@ download_single() {
     || die "Failed to save. Check it manually $tmp"
   echo "  -> Package saved to libs/$id"
 
+  [ -z "$tmp" ] && die '!! $tmp was null !!'
   rm -rf $tmp
+}
+download_source() {
+  # expect: id (e.g. libc6_2.15-0ubuntu10.18_amd64)
+  # result: downloads source files & debug .so files
+  # stored at ./libs/$orig_id/(debug|source).
+  local orig_id="$1"
+  local trimmed_id="$(grep -o '_.*' <<< "$1")" # id without the pkgname
+  local ver="$(sed 's/_\(2\.[0-9]*\).*/\1/' <<< "$trimmed_id")" # e.g. "2.15"
+  local source_id="glibc-source$(sed 's/[0-9a-z]*$/all/' <<< "$trimmed_id")" # need to replace _(amd64|i386|...) with _all
+  local debug_id="libc6-dbg$trimmed_id"
+
+  echo "Getting debug materials for $orig_id"
+  if [ -d "libs/$orig_id/source" ] || [ -d "libs/$orig_id/debug" ]; then
+      die "  --> Downloaded before. Remove 'libs/$orig_id/source' to download again."
+  fi
+
+  local urlbase="$(grep -o '.*/' "db/$orig_id.url")"
+  local source_url="$(sed 's/main/universe/' <<< "$urlbase")$source_id.deb"
+  local debug_url="$urlbase$debug_id.deb"
+
+  # get sources
+  extract_package "$source_url"
+  tar --wildcards -xf data.tar.* "./usr/src/glibc/glibc-*" || die "tar failed"
+  tar xf ./usr/src/glibc/glibc-* || die "tar failed"
+  local tmp="$PWD"
+  popd 1>/dev/null
+
+  mkdir "libs/$orig_id/source"
+  mv "$tmp/glibc-$ver" "libs/$orig_id/source"
+  [ -z "$tmp" ] && die '!! $tmp was null !!'
+  rm -rf "$tmp"
+
+  # get debug symbols
+  extract_package "$debug_url"
+  tar xf data.tar.* || die "tar failed"
+  local tmp="$PWD"
+  popd 1>/dev/null
+
+  mkdir "libs/$orig_id/debug"
+  mv "$tmp/usr/lib/debug/lib" "$tmp/lib"  # /lib should not exist
+  cp $tmp/lib/*/* libs/$orig_id/debug 2>/dev/null || cp $tmp/lib32/* libs/$orig_id/debug 2>/dev/null \
+    || die "Failed to save. Check it manually $tmp"
+  ln libs/$orig_id/debug/libc-$ver.so libs/$orig_id/debug/libc.so.6
+  [ -z "$tmp" ] && die '!! $tmp was null !!'
+  rm -rf "$tmp"
 }
 
 if [[ $# != 1 ]]; then
   usage
 fi
 download_single "$1"
+if grep -q ubuntu <<< "$1"; then
+  download_source "$1"
+fi
