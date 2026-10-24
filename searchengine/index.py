@@ -40,40 +40,36 @@ if __name__ == '__main__':
     es = Elasticsearch(hosts=["http://localhost:9200"])
 
     if args.fresh:
-        es.indices.delete(index=args.index, ignore=[404])
+        es.options(ignore_status=404).indices.delete(index=args.index)
 
-    es.indices.create(index=args.index, ignore=[400])
-    es.indices.put_mapping(index=args.index, doc_type='libc', body={
-        'libc': {
-            "properties": {
-                "symbols": {
-                    "type": "text",
-                    "analyzer": "whitespace"
-                },
-                "sha1": {
-                    "type": "keyword",
-                },
-                "md5": {
-                    "type": "keyword",
-                },
-                "sha256": {
-                    "type": "keyword",
-                },
-                "buildid": {
-                    "type": "keyword",
-                },
-                "id": {
-                    "type": "keyword",
-                },
-            }
-        }
-    }, include_type_name=True)
+    es.options(ignore_status=400).indices.create(index=args.index)
+    es.indices.put_mapping(index=args.index, properties={
+        "symbols": {
+            "type": "text",
+            "analyzer": "whitespace"
+        },
+        "sha1": {
+            "type": "keyword",
+        },
+        "md5": {
+            "type": "keyword",
+        },
+        "sha256": {
+            "type": "keyword",
+        },
+        "buildid": {
+            "type": "keyword",
+        },
+        "id": {
+            "type": "keyword",
+        },
+    })
 
     dir = os.path.abspath(args.dir)
     for libc_fname in glob.glob(f'{dir}/*.so'):
         id, _ = os.path.splitext(os.path.basename(libc_fname))
         log.info(f'{id}: indexing')
-        res = es.get(index=args.index, id=id, ignore=[404])
+        res = es.options(ignore_status=404).get(index=args.index, id=id)
         if res['found']:
             log.info(f'{id}: already exists')
             continue

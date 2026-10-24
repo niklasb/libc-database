@@ -1,4 +1,4 @@
-elasticsearch>=7.17,<8
+elasticsearch>=9,<10
 connexion[uvicorn]>=3,<4
 gunicorn
 starlette

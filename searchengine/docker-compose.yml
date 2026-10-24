@@ -17,11 +17,12 @@ services:
         tag: gunicorn
 
   es01:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.29
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.5.5
     container_name: es01
     environment:
       - node.name=es01
       - discovery.type=single-node
+      - xpack.security.enabled=false
       - bootstrap.memory_lock=true
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     ulimits:
@@ -29,7 +30,7 @@ services:
         soft: -1
         hard: -1
     volumes:
-      - data01:/usr/share/elasticsearch/data
+      - esdata9:/usr/share/elasticsearch/data
     ports:
       - 127.0.0.1:9200:9200
     networks:
@@ -41,7 +42,7 @@ services:
         tag: elasticsearch
 
 volumes:
-  data01:
+  esdata9:
     driver: local
 
 networks:
